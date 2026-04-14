@@ -1,23 +1,27 @@
 /**
  * Authentication Context
- * Manages authentication state and provides auth methods
+ * Manages auth state, integrates with tokenStorage and authService.
+ *
+ * Initialisation strategy:
+ *  1. Immediately hydrate from localStorage so protected routes render without
+ *     a loading flash (stored user is available synchronously).
+ *  2. Silently call GET /admin/auth/me to validate the token and refresh the
+ *     stored user profile. A 401 from getMe propagates through the axios
+ *     interceptor which clears storage and redirects to /login automatically.
  */
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
 import authService from '../services/authentication';
+import tokenStorage from '../services/tokenStorage';
 
-// Create context
 const AuthContext = createContext(null);
 
-// Initial state
 const initialState = {
   user: null,
-  token: null,
   isAuthenticated: false,
   isLoading: true,
   error: null,
 };
 
-// Reducer
 function authReducer(state, action) {
   switch (action.type) {
     case 'LOGIN_START':
@@ -27,104 +31,84 @@ function authReducer(state, action) {
       return {
         ...state,
         user: action.payload.user,
-        token: action.payload.token,
         isAuthenticated: true,
         isLoading: false,
         error: null,
       };
 
     case 'LOGIN_ERROR':
-      return {
-        ...state,
-        isLoading: false,
-        error: action.payload,
-        isAuthenticated: false,
-      };
+      return { ...state, isLoading: false, error: action.payload, isAuthenticated: false };
 
     case 'LOGOUT':
-      return {
-        ...state,
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        error: null,
-      };
+      return { ...state, user: null, isAuthenticated: false, error: null, isLoading: false };
 
     case 'INITIALIZE':
       return {
         ...state,
         user: action.payload.user,
-        token: action.payload.token,
         isAuthenticated: action.payload.isAuthenticated,
         isLoading: false,
       };
+
+    case 'UPDATE_USER':
+      return { ...state, user: action.payload };
 
     default:
       return state;
   }
 }
 
-// Provider component
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Initialize auth state on mount
+  // ─── Initialise on mount ─────────────────────────────────────────────────
   useEffect(() => {
-    const user = authService.getStoredUser();
-    const token = localStorage.getItem('token');
-    const isAuthenticated = authService.isAuthenticated();
+    const storedUser = tokenStorage.getUser();
+    const isAuthenticated = tokenStorage.isAuthenticated();
 
-    dispatch({
-      type: 'INITIALIZE',
-      payload: { user, token, isAuthenticated },
-    });
-  }, []);
+    // Immediately hydrate from cache so pages don't flash the loading screen.
+    dispatch({ type: 'INITIALIZE', payload: { user: storedUser, isAuthenticated } });
 
-  // Login
-  const login = useCallback(async (credentials) => {
-    dispatch({ type: 'LOGIN_START' });
-
-    try {
-      const { token, user } = await authService.login(credentials);
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: { token, user },
+    // Silently validate token and refresh user profile.
+    if (isAuthenticated) {
+      authService.getMe().then((freshUser) => {
+        dispatch({ type: 'UPDATE_USER', payload: freshUser });
+      }).catch(() => {
+        // The axios interceptor handles 401 (clears tokens + redirects to /login).
       });
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error.message || 'Login failed';
-      dispatch({
-        type: 'LOGIN_ERROR',
-        payload: errorMessage,
-      });
-      return { success: false, error: errorMessage };
     }
   }, []);
 
-  // Logout
+  // ─── Login ────────────────────────────────────────────────────────────────
+  const login = useCallback(async ({ username, password }) => {
+    dispatch({ type: 'LOGIN_START' });
+    try {
+      const { user } = await authService.login({ username, password });
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user } });
+      return { success: true };
+    } catch (error) {
+      const message = error.message || 'Login failed';
+      dispatch({ type: 'LOGIN_ERROR', payload: message });
+      return { success: false, error: message };
+    }
+  }, []);
+
+  // ─── Logout ───────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     await authService.logout();
     dispatch({ type: 'LOGOUT' });
   }, []);
 
-  const value = {
-    ...state,
-    login,
-    logout,
-  };
+  const value = { ...state, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Custom hook to use auth context
 export function useAuth() {
   const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }
 
 export default AuthContext;
+

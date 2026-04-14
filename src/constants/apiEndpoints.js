@@ -1,34 +1,36 @@
 /**
  * API Endpoints Configuration
+ * Based on Postman collection: Site Safe Admin Panel - Complete APIs
+ * Base URL: http://localhost:3000 (override via REACT_APP_API_URL)
  */
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export const API_ENDPOINTS = {
-  // Authentication
-  LOGIN: '/auth/login',
-  LOGOUT: '/auth/logout',
-  REFRESH_TOKEN: '/auth/refresh-token',
-  VERIFY_TOKEN: '/auth/verify',
+  // Admin Authentication
+  LOGIN: '/admin/auth/login',
+  REFRESH_TOKEN: '/admin/auth/refresh',
+  GET_ME: '/admin/auth/me',
+  LOGOUT: '/admin/auth/logout',
 
   // Dashboard
-  DASHBOARD_STATS: '/dashboard/stats',
-  RECENT_ACTIVITIES: '/dashboard/activities',
+  DASHBOARD_STATS: '/admin/dashboard/stats',
+  DASHBOARD_ACTIVITIES: '/admin/dashboard/activities',
+  DASHBOARD_DEVICE_HISTORY: '/admin/dashboard/history',
+  DASHBOARD_OTP_SUMMARY: '/admin/dashboard/otp-summary',
 
   // Device Management
-  GET_DEVICES: '/devices',
-  GET_DEVICE: '/devices/:id',
-  BLOCK_DEVICE_CAMERA: '/devices/:id/block-camera',
-  UNBLOCK_DEVICE_CAMERA: '/devices/:id/unblock-camera',
+  DEVICES: '/admin/devices',
+  BLOCK_CAMERA: (deviceId) => `/admin/devices/${deviceId}/block-camera`,
+  UNBLOCK_CAMERA: (deviceId) => `/admin/devices/${deviceId}/unblock-camera`,
 
-  // Uninstall OTP
-  GET_CURRENT_OTP: '/otp/current',
-  GET_OTP_HISTORY: '/otp/history',
-  GENERATE_NEW_OTP: '/otp/generate',
+  // OTP Management
+  OTP_GENERATE: '/admin/otp/generate',
+  OTP_CURRENT: '/admin/otp/current',
+  OTP_HISTORY: '/admin/otp/history',
+  OTP_LIST: '/admin/otp',
+  OTP_VERIFY: '/admin/otp/verify',
 
   // User Management
-  GET_USERS: '/users',
-  CREATE_USER: '/users',
-  UPDATE_USER: '/users/:id',
-  DELETE_USER: '/users/:id',
-  GET_USER: '/users/:id',
+  USERS: '/admin/users',
+  USER: (userId) => `/admin/users/${userId}`,
 };

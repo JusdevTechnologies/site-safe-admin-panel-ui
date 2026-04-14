@@ -1,70 +1,71 @@
 /**
  * Authentication Service
- * Handles all authentication-related API calls
+ * Handles all auth-related API calls and token lifecycle.
+ *
+ * Login uses a plain axios call to avoid triggering the refresh interceptor
+ * before tokens are stored. All other calls use the shared apiClient.
  */
+import axios from 'axios';
 import apiClient from './api';
-import { API_ENDPOINTS } from '../constants/apiEndpoints';
+import { API_BASE_URL, API_ENDPOINTS } from '../constants/apiEndpoints';
+import tokenStorage from './tokenStorage';
+
+const extractApiError = (error) =>
+  error.response?.data?.error?.message || error.message || 'An unexpected error occurred';
 
 export const authService = {
   /**
-   * Login user with credentials
+   * Authenticate with username + password.
+   * Stores access token, refresh token and user profile in localStorage.
+   * Returns the user object on success; throws on failure.
    */
-  login: async (credentials) => {
+  login: async ({ username, password }) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.LOGIN, credentials);
-      const { token, user } = response.data;
-
-      // Store token and user info
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      return { token, user };
+      const response = await axios.post(
+        `${API_BASE_URL}${API_ENDPOINTS.LOGIN}`,
+        { username, password },
+        { headers: { 'Content-Type': 'application/json' }, timeout: 15_000 }
+      );
+      const { user, access_token, refresh_token, expires_in } = response.data.data;
+      tokenStorage.setSession({ access_token, refresh_token, expires_in, user });
+      return { user };
     } catch (error) {
-      throw error.response?.data || error;
+      throw new Error(extractApiError(error));
     }
   },
 
   /**
-   * Logout user
+   * Invalidate the server session and clear local storage.
+   * Local storage is always cleared regardless of API result.
    */
   logout: async () => {
     try {
       await apiClient.post(API_ENDPOINTS.LOGOUT);
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
+      // Intentionally swallowed — always clear local state.
     } finally {
-      // Clear stored credentials regardless of API response
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      tokenStorage.clear();
     }
   },
 
   /**
-   * Verify token validity
+   * Fetch the current authenticated user's profile.
+   * Updates the stored user object on success.
    */
-  verifyToken: async () => {
+  getMe: async () => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.VERIFY_TOKEN);
-      return response.data.valid;
+      const response = await apiClient.get(API_ENDPOINTS.GET_ME);
+      const user = response.data.data;
+      tokenStorage.setSession({ user });
+      return user;
     } catch (error) {
-      return false;
+      throw new Error(extractApiError(error));
     }
   },
 
-  /**
-   * Get stored user from localStorage
-   */
-  getStoredUser: () => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  },
-
-  /**
-   * Check if user is authenticated
-   */
-  isAuthenticated: () => {
-    return !!localStorage.getItem('token');
-  },
+  getStoredUser: () => tokenStorage.getUser(),
+  isAuthenticated: () => tokenStorage.isAuthenticated(),
 };
 
 export default authService;
+

@@ -1,156 +1,138 @@
 /**
  * Device Management Page
- * Display devices and allow blocking/unblocking camera
+ * Lists all registered devices and allows admins to block/unblock cameras.
+ * All data is sourced from the backend API via the useDevices hook.
  */
-import { useState } from 'react';
-import { Shield, Lock, Unlock, Search, Filter } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Shield, Lock, Unlock, Search, Filter, RefreshCw, X } from 'lucide-react';
 import { MainLayout } from '../../components/Layout';
 import { Card, Table, Badge, Button, Input, Modal } from '../../components/Common';
-import { formatDateTime, formatDeviceStatus } from '../../utils/helpers';
+import { formatDateTime } from '../../utils/helpers';
+import useDevices from '../../hooks/useDevices';
 
 function DeviceManagement() {
+  const { devices, loading, error, actionLoading, fetchDevices, blockCamera, unblockCamera } =
+    useDevices();
+
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [selectedDevice, setSelectedDevice] = useState(null);
-  const [showActionModal, setShowActionModal] = useState(false);
   const [actionType, setActionType] = useState(null);
+  const [reason, setReason] = useState('');
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [notification, setNotification] = useState(null);
 
-  const [devices, setDevices] = useState([
-    {
-      id: 1,
-      deviceName: 'Samsung Galaxy S21',
-      deviceId: 'DEV-001',
-      model: 'SM-G991N',
-      cameraStatus: 'blocked',
-      lastActive: new Date(Date.now() - 5 * 60000),
-      osVersion: 'Android 14',
-      user: 'John Doe',
-    },
-    {
-      id: 2,
-      deviceName: 'Samsung Galaxy A12',
-      deviceId: 'DEV-002',
-      model: 'SM-A125F',
-      cameraStatus: 'unblocked',
-      lastActive: new Date(Date.now() - 15 * 60000),
-      osVersion: 'Android 12',
-      user: 'Jane Smith',
-    },
-    {
-      id: 3,
-      deviceName: 'Samsung Galaxy M31',
-      deviceId: 'DEV-003',
-      model: 'SM-M315F',
-      cameraStatus: 'blocked',
-      lastActive: new Date(Date.now() - 30 * 60000),
-      osVersion: 'Android 11',
-      user: 'Mike Johnson',
-    },
-    {
-      id: 4,
-      deviceName: 'Samsung Galaxy Z Fold',
-      deviceId: 'DEV-004',
-      model: 'SM-F916N',
-      cameraStatus: 'unblocked',
-      lastActive: new Date(Date.now() - 45 * 60000),
-      osVersion: 'Android 14',
-      user: 'Sarah Wilson',
-    },
-    {
-      id: 5,
-      deviceName: 'Samsung Galaxy A52',
-      deviceId: 'DEV-005',
-      model: 'SM-A525F',
-      cameraStatus: 'blocked',
-      lastActive: new Date(Date.now() - 60 * 60000),
-      osVersion: 'Android 13',
-      user: 'Tom Brown',
-    },
-  ]);
+  const searchTimer = useRef(null);
 
-  const handleBlockCamera = (device) => {
+  // ─── Debounced server-side search ─────────────────────────────────────────
+  useEffect(() => {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      fetchDevices({ search: searchTerm || undefined, status: statusFilter || undefined });
+    }, 400);
+    return () => clearTimeout(searchTimer.current);
+  }, [searchTerm, statusFilter, fetchDevices]);
+
+  // ─── Auto-dismiss notification after 4 s ─────────────────────────────────
+  useEffect(() => {
+    if (!notification) return;
+    const t = setTimeout(() => setNotification(null), 4000);
+    return () => clearTimeout(t);
+  }, [notification]);
+
+  const openActionModal = (device, type) => {
     setSelectedDevice(device);
-    setActionType('block');
+    setActionType(type);
+    setReason('');
     setShowActionModal(true);
   };
 
-  const handleUnblockCamera = (device) => {
-    setSelectedDevice(device);
-    setActionType('unblock');
-    setShowActionModal(true);
-  };
-
-  const handleConfirmAction = () => {
-    if (selectedDevice) {
-      setDevices(
-        devices.map((d) =>
-          d.id === selectedDevice.id
-            ? {
-                ...d,
-                cameraStatus: actionType === 'block' ? 'blocked' : 'unblocked',
-              }
-            : d
-        )
-      );
-    }
+  const closeActionModal = () => {
     setShowActionModal(false);
     setSelectedDevice(null);
     setActionType(null);
+    setReason('');
   };
 
-  const filteredDevices = devices.filter((device) =>
-    device.deviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    device.deviceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    device.user.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleConfirmAction = async () => {
+    if (!selectedDevice) return;
+    const fn = actionType === 'block' ? blockCamera : unblockCamera;
+    const result = await fn(selectedDevice.id, reason || undefined);
+    closeActionModal();
+    setNotification(
+      result.success
+        ? { type: 'success', message: `Camera ${actionType === 'block' ? 'blocked' : 'unblocked'} successfully` }
+        : { type: 'error', message: result.error }
+    );
+  };
+
+  const blockedCount = devices.filter((d) => d.camera_blocked).length;
+  const unblockedCount = devices.filter((d) => !d.camera_blocked).length;
 
   const deviceColumns = [
-    { key: 'deviceName', label: 'Device Name' },
-    { key: 'deviceId', label: 'Device ID' },
-    { key: 'user', label: 'User' },
-    { key: 'osVersion', label: 'OS Version' },
     {
-      key: 'cameraStatus',
-      label: 'Camera Status',
-      render: (row) => {
-        const status = formatDeviceStatus(row.cameraStatus);
-        return (
-          <Badge
-            variant={status.color === 'success' ? 'success' : 'danger'}
-          >
-            {status.text}
-          </Badge>
-        );
-      },
+      key: 'device_name',
+      label: 'Device Name',
+      render: (row) => row.device_name ?? row.device_identifier ?? '—',
     },
     {
-      key: 'lastActive',
+      key: 'device_identifier',
+      label: 'Device ID',
+      render: (row) => row.device_identifier ?? '—',
+    },
+    {
+      key: 'employee',
+      label: 'Employee',
+      render: (row) =>
+        row.employee?.employee_id ?? row.employee_id ?? row.user ?? '—',
+    },
+    {
+      key: 'device_os',
+      label: 'OS',
+      render: (row) => row.device_os ?? row.os ?? '—',
+    },
+    {
+      key: 'camera_blocked',
+      label: 'Camera Status',
+      render: (row) =>
+        row.camera_blocked ? (
+          <Badge variant="danger">Blocked</Badge>
+        ) : (
+          <Badge variant="success">Active</Badge>
+        ),
+    },
+    {
+      key: 'updated_at',
       label: 'Last Active',
-      render: (row) => formatDateTime(row.lastActive),
+      render: (row) =>
+        row.updated_at ?? row.last_active
+          ? formatDateTime(row.updated_at ?? row.last_active)
+          : '—',
     },
     {
       key: 'actions',
       label: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {row.cameraStatus === 'unblocked' ? (
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => handleBlockCamera(row)}
-              className="text-xs"
-            >
-              <Lock size={14} />
-              Block
-            </Button>
-          ) : (
+          {row.camera_blocked ? (
             <Button
               variant="success"
               size="sm"
-              onClick={() => handleUnblockCamera(row)}
-              className="text-xs"
+              onClick={() => openActionModal(row, 'unblock')}
+              className="text-xs gap-1"
+              disabled={actionLoading}
             >
-              <Unlock size={14} />
-              Unblock
+              <Unlock size={14} /> Unblock
+            </Button>
+          ) : (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => openActionModal(row, 'block')}
+              className="text-xs gap-1"
+              disabled={actionLoading}
+            >
+              <Lock size={14} /> Block
             </Button>
           )}
         </div>
@@ -160,46 +142,90 @@ function DeviceManagement() {
 
   return (
     <MainLayout title="Device Management">
-      {/* Filters Section */}
+
+      {/* Notification banner */}
+      {notification && (
+        <div
+          className={`mb-4 p-3 rounded-lg flex items-center justify-between text-sm ${
+            notification.type === 'success'
+              ? 'bg-green-50 border border-green-200 text-green-700'
+              : 'bg-red-50 border border-red-200 text-red-700'
+          }`}
+        >
+          {notification.message}
+          <button onClick={() => setNotification(null)} className="ml-4 hover:opacity-70">
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Filters */}
       <Card className="mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <Input
-              placeholder="Search by device name, ID, or user..."
+              placeholder="Search by device name, ID, or employee…"
               prefix={<Search size={18} />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="gap-2">
-            <Filter size={18} />
-            Filters
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          >
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="blocked">Blocked</option>
+          </select>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => { setSearchTerm(''); setStatusFilter(''); fetchDevices(); }}
+          >
+            <Filter size={18} /> Clear
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => fetchDevices()}>
+            <RefreshCw size={18} /> Refresh
           </Button>
         </div>
       </Card>
 
+      {/* Error state */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Devices Table */}
       <Card title="Connected Devices" subtitle="Manage device camera access">
-        <Table columns={deviceColumns} data={filteredDevices} />
+        {loading ? (
+          <div className="py-12 text-center text-gray-400">Loading devices…</div>
+        ) : devices.length === 0 ? (
+          <div className="py-12 text-center text-gray-400">No devices found</div>
+        ) : (
+          <Table columns={deviceColumns} data={devices} />
+        )}
       </Card>
 
-      {/* Action Modal */}
+      {/* Action Confirmation Modal */}
       <Modal
         isOpen={showActionModal}
-        onClose={() => setShowActionModal(false)}
+        onClose={closeActionModal}
         title={actionType === 'block' ? 'Block Camera' : 'Unblock Camera'}
         size="md"
       >
         <div className="space-y-4">
           <div className="p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-gray-700">
-              <strong>Device:</strong> {selectedDevice?.deviceName}
+              <strong>Device:</strong>{' '}
+              {selectedDevice?.device_name ?? selectedDevice?.device_identifier ?? '—'}
             </p>
             <p className="text-sm text-gray-700">
-              <strong>Device ID:</strong> {selectedDevice?.deviceId}
-            </p>
-            <p className="text-sm text-gray-700">
-              <strong>User:</strong> {selectedDevice?.user}
+              <strong>Device ID:</strong> {selectedDevice?.device_identifier ?? '—'}
             </p>
           </div>
 
@@ -209,27 +235,39 @@ function DeviceManagement() {
             device?
           </p>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Reason <span className="text-gray-400">(optional)</span>
+            </label>
+            <Input
+              placeholder="E.g. Policy violation, Employee request…"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+          </div>
+
           {actionType === 'block' && (
             <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
-              ⚠️ The device camera will be blocked immediately.
+              ⚠️ The device camera will be blocked immediately. This action is logged in the audit trail.
             </p>
           )}
         </div>
 
         <div className="flex gap-3 mt-6">
-          <Button variant="secondary" onClick={() => setShowActionModal(false)}>
+          <Button variant="secondary" onClick={closeActionModal} disabled={actionLoading}>
             Cancel
           </Button>
           <Button
             variant={actionType === 'block' ? 'danger' : 'success'}
             onClick={handleConfirmAction}
+            isLoading={actionLoading}
           >
             {actionType === 'block' ? 'Block Camera' : 'Unblock Camera'}
           </Button>
         </div>
       </Modal>
 
-      {/* Statistics */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         <Card>
           <div className="text-center">
@@ -242,18 +280,14 @@ function DeviceManagement() {
           <div className="text-center">
             <Lock size={32} className="text-red-600 mx-auto mb-2" />
             <p className="text-gray-600 text-sm mb-2">Blocked Cameras</p>
-            <p className="text-3xl font-bold text-red-600">
-              {devices.filter((d) => d.cameraStatus === 'blocked').length}
-            </p>
+            <p className="text-3xl font-bold text-red-600">{blockedCount}</p>
           </div>
         </Card>
         <Card>
           <div className="text-center">
             <Unlock size={32} className="text-green-600 mx-auto mb-2" />
-            <p className="text-gray-600 text-sm mb-2">Unblocked Cameras</p>
-            <p className="text-3xl font-bold text-green-600">
-              {devices.filter((d) => d.cameraStatus === 'unblocked').length}
-            </p>
+            <p className="text-gray-600 text-sm mb-2">Active Cameras</p>
+            <p className="text-3xl font-bold text-green-600">{unblockedCount}</p>
           </div>
         </Card>
       </div>
@@ -262,3 +296,4 @@ function DeviceManagement() {
 }
 
 export default DeviceManagement;
+

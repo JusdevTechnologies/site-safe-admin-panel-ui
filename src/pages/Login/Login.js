@@ -49,8 +49,8 @@ function Login() {
         {/* Demo Credentials */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials:</p>
-          <p className="text-xs text-blue-800">Email: admin@sitesafe.com</p>
-          <p className="text-xs text-blue-800">Password: Demo@12345</p>
+          <p className="text-xs text-blue-800">Username: admin</p>
+          <p className="text-xs text-blue-800">Password: SecurePassword123</p>
         </div>
       </div>
     </div>
