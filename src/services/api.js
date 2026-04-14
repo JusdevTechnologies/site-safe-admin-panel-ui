@@ -5,14 +5,14 @@
  * Concurrent requests that arrive during a refresh are queued and
  * replayed once the new access token is available.
  */
-import axios from 'axios';
-import { API_BASE_URL, API_ENDPOINTS } from '../constants/apiEndpoints';
-import tokenStorage from './tokenStorage';
+import axios from "axios";
+import { API_BASE_URL, API_ENDPOINTS } from "../constants/apiEndpoints";
+import tokenStorage from "./tokenStorage";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 30_000,
+  headers: { "Content-Type": "application/json" },
+  timeout: 30_000
 });
 
 // ─── Token-refresh queue ─────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ apiClient.interceptors.response.use(
 
       if (!refreshToken) {
         tokenStorage.clear();
-        window.location.href = '/login';
+        window.location.href = "/login";
         return Promise.reject(error);
       }
 
@@ -70,19 +70,24 @@ apiClient.interceptors.response.use(
         // Use a plain axios call — NOT apiClient — to avoid interceptor loops.
         const { data } = await axios.post(
           `${API_BASE_URL}${API_ENDPOINTS.REFRESH_TOKEN}`,
-          { refresh_token: refreshToken },
-          { headers: { 'Content-Type': 'application/json' }, timeout: 10_000 }
+          { refreshToken },
+          { headers: { "Content-Type": "application/json" }, timeout: 10_000 }
         );
 
-        const { access_token, expires_in } = data.data;
-        tokenStorage.updateAccessToken(access_token, expires_in);
-        processQueue(null, access_token);
-        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        // API returns camelCase token keys; persist both so the new refresh
+        // token is available for the next silent refresh cycle.
+        const { accessToken, refreshToken: newRefreshToken } = data.data;
+        tokenStorage.setSession({
+          access_token: accessToken,
+          refresh_token: newRefreshToken
+        });
+        processQueue(null, accessToken);
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
         tokenStorage.clear();
-        window.location.href = '/login';
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -94,4 +99,3 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
-

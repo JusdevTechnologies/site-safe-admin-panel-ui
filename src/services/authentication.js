@@ -5,13 +5,15 @@
  * Login uses a plain axios call to avoid triggering the refresh interceptor
  * before tokens are stored. All other calls use the shared apiClient.
  */
-import axios from 'axios';
-import apiClient from './api';
-import { API_BASE_URL, API_ENDPOINTS } from '../constants/apiEndpoints';
-import tokenStorage from './tokenStorage';
+import axios from "axios";
+import apiClient from "./api";
+import { API_BASE_URL, API_ENDPOINTS } from "../constants/apiEndpoints";
+import tokenStorage from "./tokenStorage";
 
 const extractApiError = (error) =>
-  error.response?.data?.error?.message || error.message || 'An unexpected error occurred';
+  error.response?.data?.error?.message ||
+  error.message ||
+  "An unexpected error occurred";
 
 export const authService = {
   /**
@@ -24,10 +26,15 @@ export const authService = {
       const response = await axios.post(
         `${API_BASE_URL}${API_ENDPOINTS.LOGIN}`,
         { username, password },
-        { headers: { 'Content-Type': 'application/json' }, timeout: 15_000 }
+        { headers: { "Content-Type": "application/json" }, timeout: 15_000 }
       );
-      const { user, access_token, refresh_token, expires_in } = response.data.data;
-      tokenStorage.setSession({ access_token, refresh_token, expires_in, user });
+      // API returns camelCase token keys; normalise to snake_case for tokenStorage.
+      const { user, accessToken, refreshToken } = response.data.data;
+      tokenStorage.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        user
+      });
       return { user };
     } catch (error) {
       throw new Error(extractApiError(error));
@@ -64,8 +71,7 @@ export const authService = {
   },
 
   getStoredUser: () => tokenStorage.getUser(),
-  isAuthenticated: () => tokenStorage.isAuthenticated(),
+  isAuthenticated: () => tokenStorage.isAuthenticated()
 };
 
 export default authService;
-
