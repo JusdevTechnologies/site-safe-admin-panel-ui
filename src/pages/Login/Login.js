@@ -1,12 +1,12 @@
 /**
  * Login Page
  */
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Lock } from 'lucide-react';
-import { Card } from '../../components/Common';
-import { LoginForm } from '../../components/Auth';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Lock } from "lucide-react";
+import { Card } from "../../components/Common";
+import { LoginForm } from "../../components/Auth";
+import { useAuth } from "../../contexts/AuthContext";
 
 function Login() {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ function Login() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
 
@@ -35,22 +35,26 @@ function Login() {
         <Card className="shadow-lg">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-            <p className="text-gray-600 text-sm mt-1">Sign in to your admin account</p>
+            <p className="text-gray-600 text-sm mt-1">
+              Sign in to your admin account
+            </p>
           </div>
 
           <LoginForm />
 
           {/* Footer */}
           <div className="mt-6 pt-6 border-t border-gray-100 text-center text-sm text-gray-600">
-            <p>© 2024 SiteSafe Admin Panel. All rights reserved.</p>
+            <p>© 2026 SiteSafe Admin Panel. All rights reserved.</p>
           </div>
         </Card>
 
         {/* Demo Credentials */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials:</p>
+          <p className="text-xs font-semibold text-blue-900 mb-2">
+            Demo Credentials:
+          </p>
           <p className="text-xs text-blue-800">Username: admin</p>
-          <p className="text-xs text-blue-800">Password: SecurePassword123</p>
+          <p className="text-xs text-blue-800">Password: Admin@1234</p>
         </div>
       </div>
     </div>
