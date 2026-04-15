@@ -22,13 +22,13 @@ export const API_ENDPOINTS = {
 
   // Device Management
   DEVICES: "/admin/devices",
-  BLOCK_CAMERA: (deviceId) => `/admin/devices/${deviceId}/block-camera`,
-  UNBLOCK_CAMERA: (deviceId) => `/admin/devices/${deviceId}/unblock-camera`,
+  BLOCK_CAMERA: (deviceId) => `/admin/devices/${deviceId}/block`,
+  UNBLOCK_CAMERA: (deviceId) => `/admin/devices/${deviceId}/unblock`,
 
   // OTP Management
   OTP_GENERATE: "/admin/otp/generate",
-  OTP_CURRENT: "/admin/otp/current",
-  OTP_HISTORY: "/admin/otp/history",
+  OTP_CURRENT: (deviceId) => `/admin/otp/device/${deviceId}`,
+  OTP_HISTORY: (deviceId) => `/admin/otp/device/${deviceId}/history`,
   OTP_LIST: "/admin/otp",
   OTP_VERIFY: "/otp/verify",
 

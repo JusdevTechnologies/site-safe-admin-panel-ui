@@ -2,8 +2,8 @@
  * OTP Service
  * Manages OTP generation, retrieval and verification for device uninstallation.
  */
-import apiClient from './api';
-import { API_ENDPOINTS } from '../constants/apiEndpoints';
+import apiClient from "./api";
+import { API_ENDPOINTS } from "../constants/apiEndpoints";
 
 const extractData = (response) => response.data.data;
 
@@ -14,7 +14,9 @@ export const otpService = {
    * @param {string} deviceId - UUID of the device
    */
   generateOtp: async (deviceId) => {
-    const response = await apiClient.post(API_ENDPOINTS.OTP_GENERATE, { device_id: deviceId });
+    const response = await apiClient.post(API_ENDPOINTS.OTP_GENERATE, {
+      device_id: deviceId
+    });
     return extractData(response);
   },
 
@@ -24,9 +26,7 @@ export const otpService = {
    * @param {string} deviceId - UUID of the device
    */
   getCurrentOtp: async (deviceId) => {
-    const response = await apiClient.get(API_ENDPOINTS.OTP_CURRENT, {
-      params: { device_id: deviceId },
-    });
+    const response = await apiClient.get(API_ENDPOINTS.OTP_CURRENT(deviceId));
     return extractData(response);
   },
 
@@ -36,8 +36,8 @@ export const otpService = {
    * @param {object} params - page, limit
    */
   getOtpHistory: async (deviceId, params = {}) => {
-    const response = await apiClient.get(API_ENDPOINTS.OTP_HISTORY, {
-      params: { device_id: deviceId, ...params },
+    const response = await apiClient.get(API_ENDPOINTS.OTP_HISTORY(deviceId), {
+      params
     });
     return extractData(response);
   },
@@ -59,10 +59,10 @@ export const otpService = {
   verifyOtp: async (deviceId, otpCode) => {
     const response = await apiClient.post(API_ENDPOINTS.OTP_VERIFY, {
       device_id: deviceId,
-      otp_code: otpCode,
+      otp_code: otpCode
     });
     return extractData(response);
-  },
+  }
 };
 
 export default otpService;

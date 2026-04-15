@@ -3,22 +3,44 @@
  * Lists all registered devices and allows admins to block/unblock cameras.
  * All data is sourced from the backend API via the useDevices hook.
  */
-import { useState, useEffect, useRef } from 'react';
-import { Shield, Lock, Unlock, Search, Filter, RefreshCw, X } from 'lucide-react';
-import { MainLayout } from '../../components/Layout';
-import { Card, Table, Badge, Button, Input, Modal } from '../../components/Common';
-import { formatDateTime } from '../../utils/helpers';
-import useDevices from '../../hooks/useDevices';
+import { useState, useEffect, useRef } from "react";
+import {
+  Shield,
+  Lock,
+  Unlock,
+  Search,
+  Filter,
+  RefreshCw,
+  X
+} from "lucide-react";
+import { MainLayout } from "../../components/Layout";
+import {
+  Card,
+  Table,
+  Badge,
+  Button,
+  Input,
+  Modal
+} from "../../components/Common";
+import { formatDateTime } from "../../utils/helpers";
+import useDevices from "../../hooks/useDevices";
 
 function DeviceManagement() {
-  const { devices, loading, error, actionLoading, fetchDevices, blockCamera, unblockCamera } =
-    useDevices();
+  const {
+    devices,
+    loading,
+    error,
+    actionLoading,
+    fetchDevices,
+    blockCamera,
+    unblockCamera
+  } = useDevices();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [actionType, setActionType] = useState(null);
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState("");
   const [showActionModal, setShowActionModal] = useState(false);
   const [notification, setNotification] = useState(null);
 
@@ -28,7 +50,10 @@ function DeviceManagement() {
   useEffect(() => {
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
-      fetchDevices({ search: searchTerm || undefined, status: statusFilter || undefined });
+      fetchDevices({
+        search: searchTerm || undefined,
+        status: statusFilter || undefined
+      });
     }, 400);
     return () => clearTimeout(searchTimer.current);
   }, [searchTerm, statusFilter, fetchDevices]);
@@ -43,7 +68,7 @@ function DeviceManagement() {
   const openActionModal = (device, type) => {
     setSelectedDevice(device);
     setActionType(type);
-    setReason('');
+    setReason("");
     setShowActionModal(true);
   };
 
@@ -51,74 +76,74 @@ function DeviceManagement() {
     setShowActionModal(false);
     setSelectedDevice(null);
     setActionType(null);
-    setReason('');
+    setReason("");
   };
 
   const handleConfirmAction = async () => {
     if (!selectedDevice) return;
-    const fn = actionType === 'block' ? blockCamera : unblockCamera;
+    const fn = actionType === "block" ? blockCamera : unblockCamera;
     const result = await fn(selectedDevice.id, reason || undefined);
     closeActionModal();
     setNotification(
       result.success
-        ? { type: 'success', message: `Camera ${actionType === 'block' ? 'blocked' : 'unblocked'} successfully` }
-        : { type: 'error', message: result.error }
+        ? {
+            type: "success",
+            message: `Camera ${actionType === "block" ? "blocked" : "unblocked"} successfully`
+          }
+        : { type: "error", message: result.error }
     );
   };
 
-  const blockedCount = devices.filter((d) => d.camera_blocked).length;
-  const unblockedCount = devices.filter((d) => !d.camera_blocked).length;
+  const blockedCount = devices.filter((d) => d.cameraBlocked).length;
+  const unblockedCount = devices.filter((d) => !d.cameraBlocked).length;
 
   const deviceColumns = [
     {
-      key: 'device_name',
-      label: 'Device Name',
-      render: (row) => row.device_name ?? row.device_identifier ?? '—',
+      key: "deviceName",
+      label: "Device Name",
+      render: (row) => row.deviceName ?? row.deviceIdentifier ?? "—"
     },
     {
-      key: 'device_identifier',
-      label: 'Device ID',
-      render: (row) => row.device_identifier ?? '—',
+      key: "deviceIdentifier",
+      label: "Device ID",
+      render: (row) => row.deviceIdentifier ?? "—"
     },
     {
-      key: 'employee',
-      label: 'Employee',
+      key: "employee",
+      label: "Employee",
       render: (row) =>
-        row.employee?.employee_id ?? row.employee_id ?? row.user ?? '—',
+        row.employee?.employeeId ?? row.employeeId ?? row.user ?? "—"
     },
     {
-      key: 'device_os',
-      label: 'OS',
-      render: (row) => row.device_os ?? row.os ?? '—',
+      key: "deviceOs",
+      label: "OS",
+      render: (row) => row.deviceOs ?? row.os ?? "—"
     },
     {
-      key: 'camera_blocked',
-      label: 'Camera Status',
+      key: "cameraBlocked",
+      label: "Camera Status",
       render: (row) =>
-        row.camera_blocked ? (
+        row.cameraBlocked ? (
           <Badge variant="danger">Blocked</Badge>
         ) : (
           <Badge variant="success">Active</Badge>
-        ),
+        )
     },
     {
-      key: 'updated_at',
-      label: 'Last Active',
-      render: (row) =>
-        row.updated_at ?? row.last_active
-          ? formatDateTime(row.updated_at ?? row.last_active)
-          : '—',
+      key: "lastSync",
+      label: "Last Active",
+      render: (row) => (row.lastSync ? formatDateTime(row.lastSync) : "—")
     },
     {
-      key: 'actions',
-      label: 'Actions',
+      key: "actions",
+      label: "Actions",
       render: (row) => (
         <div className="flex gap-2">
-          {row.camera_blocked ? (
+          {row.cameraBlocked ? (
             <Button
               variant="success"
               size="sm"
-              onClick={() => openActionModal(row, 'unblock')}
+              onClick={() => openActionModal(row, "unblock")}
               className="text-xs gap-1"
               disabled={actionLoading}
             >
@@ -128,7 +153,7 @@ function DeviceManagement() {
             <Button
               variant="danger"
               size="sm"
-              onClick={() => openActionModal(row, 'block')}
+              onClick={() => openActionModal(row, "block")}
               className="text-xs gap-1"
               disabled={actionLoading}
             >
@@ -136,24 +161,26 @@ function DeviceManagement() {
             </Button>
           )}
         </div>
-      ),
-    },
+      )
+    }
   ];
 
   return (
     <MainLayout title="Device Management">
-
       {/* Notification banner */}
       {notification && (
         <div
           className={`mb-4 p-3 rounded-lg flex items-center justify-between text-sm ${
-            notification.type === 'success'
-              ? 'bg-green-50 border border-green-200 text-green-700'
-              : 'bg-red-50 border border-red-200 text-red-700'
+            notification.type === "success"
+              ? "bg-green-50 border border-green-200 text-green-700"
+              : "bg-red-50 border border-red-200 text-red-700"
           }`}
         >
           {notification.message}
-          <button onClick={() => setNotification(null)} className="ml-4 hover:opacity-70">
+          <button
+            onClick={() => setNotification(null)}
+            className="ml-4 hover:opacity-70"
+          >
             <X size={14} />
           </button>
         </div>
@@ -183,11 +210,19 @@ function DeviceManagement() {
           <Button
             variant="outline"
             className="gap-2"
-            onClick={() => { setSearchTerm(''); setStatusFilter(''); fetchDevices(); }}
+            onClick={() => {
+              setSearchTerm("");
+              setStatusFilter("");
+              fetchDevices();
+            }}
           >
             <Filter size={18} /> Clear
           </Button>
-          <Button variant="outline" className="gap-2" onClick={() => fetchDevices()}>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => fetchDevices()}
+          >
             <RefreshCw size={18} /> Refresh
           </Button>
         </div>
@@ -203,9 +238,13 @@ function DeviceManagement() {
       {/* Devices Table */}
       <Card title="Connected Devices" subtitle="Manage device camera access">
         {loading ? (
-          <div className="py-12 text-center text-gray-400">Loading devices…</div>
+          <div className="py-12 text-center text-gray-400">
+            Loading devices…
+          </div>
         ) : devices.length === 0 ? (
-          <div className="py-12 text-center text-gray-400">No devices found</div>
+          <div className="py-12 text-center text-gray-400">
+            No devices found
+          </div>
         ) : (
           <Table columns={deviceColumns} data={devices} />
         )}
@@ -215,24 +254,27 @@ function DeviceManagement() {
       <Modal
         isOpen={showActionModal}
         onClose={closeActionModal}
-        title={actionType === 'block' ? 'Block Camera' : 'Unblock Camera'}
+        title={actionType === "block" ? "Block Camera" : "Unblock Camera"}
         size="md"
       >
         <div className="space-y-4">
           <div className="p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-gray-700">
-              <strong>Device:</strong>{' '}
-              {selectedDevice?.device_name ?? selectedDevice?.device_identifier ?? '—'}
+              <strong>Device:</strong>{" "}
+              {selectedDevice?.deviceName ??
+                selectedDevice?.deviceIdentifier ??
+                "—"}
             </p>
             <p className="text-sm text-gray-700">
-              <strong>Device ID:</strong> {selectedDevice?.device_identifier ?? '—'}
+              <strong>Device ID:</strong>{" "}
+              {selectedDevice?.deviceIdentifier ?? "—"}
             </p>
           </div>
 
           <p className="text-gray-700">
-            Are you sure you want to{' '}
-            <strong>{actionType === 'block' ? 'block' : 'unblock'}</strong> the camera on this
-            device?
+            Are you sure you want to{" "}
+            <strong>{actionType === "block" ? "block" : "unblock"}</strong> the
+            camera on this device?
           </p>
 
           <div>
@@ -246,23 +288,28 @@ function DeviceManagement() {
             />
           </div>
 
-          {actionType === 'block' && (
+          {actionType === "block" && (
             <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
-              ⚠️ The device camera will be blocked immediately. This action is logged in the audit trail.
+              ⚠️ The device camera will be blocked immediately. This action is
+              logged in the audit trail.
             </p>
           )}
         </div>
 
         <div className="flex gap-3 mt-6">
-          <Button variant="secondary" onClick={closeActionModal} disabled={actionLoading}>
+          <Button
+            variant="secondary"
+            onClick={closeActionModal}
+            disabled={actionLoading}
+          >
             Cancel
           </Button>
           <Button
-            variant={actionType === 'block' ? 'danger' : 'success'}
+            variant={actionType === "block" ? "danger" : "success"}
             onClick={handleConfirmAction}
             isLoading={actionLoading}
           >
-            {actionType === 'block' ? 'Block Camera' : 'Unblock Camera'}
+            {actionType === "block" ? "Block Camera" : "Unblock Camera"}
           </Button>
         </div>
       </Modal>
@@ -287,7 +334,9 @@ function DeviceManagement() {
           <div className="text-center">
             <Unlock size={32} className="text-green-600 mx-auto mb-2" />
             <p className="text-gray-600 text-sm mb-2">Active Cameras</p>
-            <p className="text-3xl font-bold text-green-600">{unblockedCount}</p>
+            <p className="text-3xl font-bold text-green-600">
+              {unblockedCount}
+            </p>
           </div>
         </Card>
       </div>
@@ -296,4 +345,3 @@ function DeviceManagement() {
 }
 
 export default DeviceManagement;
-

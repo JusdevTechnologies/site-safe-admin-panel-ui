@@ -2,12 +2,16 @@
  * useDevices — manages device list state, server-side pagination/search,
  * and optimistic UI updates for camera block/unblock actions.
  */
-import { useState, useEffect, useCallback } from 'react';
-import deviceService from '../services/deviceService';
+import { useState, useEffect, useCallback } from "react";
+import deviceService from "../services/deviceService";
 
 export function useDevices() {
   const [devices, setDevices] = useState([]);
-  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10 });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 10
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -17,12 +21,12 @@ export function useDevices() {
     setError(null);
     try {
       const data = await deviceService.getDevices(params);
-      setDevices(data?.devices ?? data?.records ?? []);
-      if (data?.pagination ?? data?.meta) {
-        setPagination(data.pagination ?? data.meta);
+      setDevices(data?.devices ?? []);
+      if (data?.meta) {
+        setPagination(data.meta);
       }
     } catch (err) {
-      setError(err.message || 'Failed to load devices');
+      setError(err.message || "Failed to load devices");
     } finally {
       setLoading(false);
     }
@@ -41,13 +45,18 @@ export function useDevices() {
     try {
       const updated = await deviceService.blockCamera(deviceId, reason);
       setDevices((prev) =>
-        prev.map((d) => (d.id === deviceId ? { ...d, ...updated, camera_blocked: true } : d))
+        prev.map((d) =>
+          d.id === deviceId ? { ...d, ...updated, camera_blocked: true } : d
+        )
       );
       return { success: true };
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error?.message || err.message || 'Failed to block camera',
+        error:
+          err.response?.data?.error?.message ||
+          err.message ||
+          "Failed to block camera"
       };
     } finally {
       setActionLoading(false);
@@ -63,13 +72,18 @@ export function useDevices() {
     try {
       const updated = await deviceService.unblockCamera(deviceId, reason);
       setDevices((prev) =>
-        prev.map((d) => (d.id === deviceId ? { ...d, ...updated, camera_blocked: false } : d))
+        prev.map((d) =>
+          d.id === deviceId ? { ...d, ...updated, camera_blocked: false } : d
+        )
       );
       return { success: true };
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error?.message || err.message || 'Failed to unblock camera',
+        error:
+          err.response?.data?.error?.message ||
+          err.message ||
+          "Failed to unblock camera"
       };
     } finally {
       setActionLoading(false);
@@ -84,7 +98,7 @@ export function useDevices() {
     actionLoading,
     fetchDevices,
     blockCamera,
-    unblockCamera,
+    unblockCamera
   };
 }
 
