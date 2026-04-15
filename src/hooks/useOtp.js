@@ -18,10 +18,10 @@ export function useOtp() {
     setError(null);
     try {
       const data = await otpService.getAllOtps(params);
-      const list = data?.otps ?? data?.records ?? [];
+      const list = data?.data ?? data?.otps ?? data?.records ?? [];
       setOtpList(list);
 
-      const meta = data?.pagination ?? data?.meta ?? {};
+      const meta = data?.meta ?? data?.pagination ?? {};
       setOtpSummary({
         total: meta.total ?? list.length,
         used: list.filter((o) => o.status === 'used').length,

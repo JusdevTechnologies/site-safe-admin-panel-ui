@@ -45,10 +45,11 @@ export const otpService = {
   /**
    * List all OTPs across all devices (admin view).
    * Supported params: page, limit, status, startDate, endDate
+   * Returns full response body so the caller can access both `data` and `meta`.
    */
   getAllOtps: async (params = {}) => {
     const response = await apiClient.get(API_ENDPOINTS.OTP_LIST, { params });
-    return extractData(response);
+    return response.data;
   },
 
   /**
