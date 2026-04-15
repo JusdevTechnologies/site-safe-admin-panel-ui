@@ -2,8 +2,8 @@
  * Sidebar Component
  * Navigation sidebar for the admin panel
  */
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Menu,
   X,
@@ -11,16 +11,16 @@ import {
   BarChart3,
   Smartphone,
   KeyRound,
-  Users,
-} from 'lucide-react';
-import { MENU_ITEMS } from '../../constants/routes';
-import { useAuth } from '../../contexts/AuthContext';
+  Users
+} from "lucide-react";
+import { MENU_ITEMS } from "../../constants/routes";
+import { useAuth } from "../../contexts/AuthContext";
 
 const iconMap = {
   BarChart3: BarChart3,
   Smartphone: Smartphone,
   KeyRound: KeyRound,
-  Users: Users,
+  Users: Users
 };
 
 function Sidebar() {
@@ -41,7 +41,7 @@ function Sidebar() {
       {/* Mobile toggle button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-slate-950 text-white rounded-lg"
+        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-blue-900 text-white rounded-lg"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -49,14 +49,14 @@ function Sidebar() {
       {/* Sidebar */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-64 bg-slate-950 text-white transition-transform duration-300 ease-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          fixed inset-y-0 left-0 z-40 w-64 bg-blue-900 text-white transition-transform duration-300 ease-out
+          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
         {/* Logo Section */}
-        <div className="p-6 border-b border-slate-800">
+        <div className="p-6 border-b border-blue-800">
           <h1 className="text-xl font-bold">SiteSafe</h1>
-          <p className="text-xs text-slate-400 mt-1">Admin Panel</p>
+          <p className="text-xs text-blue-300 mt-1">Admin Panel</p>
         </div>
 
         {/* Navigation */}
@@ -74,8 +74,8 @@ function Sidebar() {
                   flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
                   ${
                     active
-                      ? 'bg-blue-800 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      ? "bg-blue-700 text-white"
+                      : "text-blue-100 hover:bg-blue-800 hover:text-white"
                   }
                 `}
               >
@@ -87,15 +87,17 @@ function Sidebar() {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-slate-800">
-          <div className="text-sm text-slate-300 mb-4">
-            <p className="font-medium">{user?.name || 'Admin User'}</p>
-            <p className="text-xs text-slate-500">{user?.email || 'admin@sitesafe.com'}</p>
+        <div className="p-4 border-t border-blue-800">
+          <div className="text-sm text-blue-100 mb-4">
+            <p className="font-medium">{user?.name || "Admin User"}</p>
+            <p className="text-xs text-blue-400">
+              {user?.email || "admin@sitesafe.com"}
+            </p>
           </div>
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-2 border border-red-400 text-red-300 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-lg text-sm font-medium transition-colors"
           >
             <LogOut size={18} />
             Logout
