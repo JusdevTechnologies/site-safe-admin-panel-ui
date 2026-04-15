@@ -2,20 +2,15 @@
  * Header Component
  * Top header of the dashboard
  */
-import { Bell, Settings, User } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { Bell, Settings, User } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 
 function Header() {
   useAuth();
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-      <div className="px-6 py-4 flex items-center justify-between">
-        {/* Left Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-        </div>
-
+      <div className="px-6 py-4 flex items-center justify-end">
         {/* Right Section */}
         <div className="flex items-center gap-4">
           {/* Notification Bell */}
