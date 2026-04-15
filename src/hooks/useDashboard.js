@@ -23,9 +23,11 @@ export function useDashboard() {
       ]);
 
       setStats(statsData?.stats ?? statsData);
-      // Accept multiple possible list-key shapes from the backend.
+      // API returns the array directly via extractData
       setDeviceHistory(
-        historyData?.records ?? historyData?.history ?? historyData?.activities ?? []
+        Array.isArray(historyData)
+          ? historyData
+          : (historyData?.records ?? historyData?.history ?? historyData?.activities ?? [])
       );
       setOtpSummary(otpData?.summary ?? otpData);
     } catch (err) {

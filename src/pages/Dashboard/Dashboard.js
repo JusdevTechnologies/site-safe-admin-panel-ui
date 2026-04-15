@@ -22,33 +22,27 @@ function Dashboard() {
   // ─── Device history table columns ────────────────────────────────────────
   const historyColumns = [
     {
-      key: "device_name",
-      label: "Device Name",
-      render: (row) => row.device_name ?? row.device?.name ?? "—"
-    },
-    {
-      key: "device_identifier",
-      label: "Device ID",
-      render: (row) => row.device_identifier ?? row.device?.identifier ?? "—"
-    },
-    {
-      key: "action_type",
+      key: "description",
       label: "Action",
-      render: (row) => row.action_type ?? row.action ?? "—"
+      render: (row) => row.description ?? row.action ?? "—"
     },
     {
-      key: "performed_by",
+      key: "deviceId",
+      label: "Device ID",
+      render: (row) => row.deviceId ?? "—"
+    },
+    {
+      key: "performedBy",
       label: "Admin",
       render: (row) =>
-        row.performed_by?.username ??
-        row.admin?.username ??
-        row.performed_by ??
+        row.performedBy?.name ??
+        row.performedBy?.email ??
         "—"
     },
     {
-      key: "created_at",
+      key: "timestamp",
       label: "Time",
-      render: (row) => formatDateTime(row.created_at ?? row.timestamp)
+      render: (row) => formatDateTime(row.timestamp ?? row.created_at)
     },
     {
       key: "status",
