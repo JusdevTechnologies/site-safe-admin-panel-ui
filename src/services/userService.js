@@ -3,8 +3,8 @@
  * Full CRUD operations for admin user management.
  * Restricted to super_admin role on the backend.
  */
-import apiClient from './api';
-import { API_ENDPOINTS } from '../constants/apiEndpoints';
+import apiClient from "./api";
+import { API_ENDPOINTS } from "../constants/apiEndpoints";
 
 const extractData = (response) => response.data.data;
 
@@ -15,7 +15,7 @@ export const userService = {
    */
   getUsers: async (params = {}) => {
     const response = await apiClient.get(API_ENDPOINTS.USERS, { params });
-    return extractData(response);
+    return { users: response.data.data, meta: response.data.meta };
   },
 
   /**
@@ -42,7 +42,10 @@ export const userService = {
    * @param {string} userId - UUID of the user
    */
   updateUser: async (userId, userData) => {
-    const response = await apiClient.patch(API_ENDPOINTS.USER(userId), userData);
+    const response = await apiClient.patch(
+      API_ENDPOINTS.USER(userId),
+      userData
+    );
     return extractData(response);
   },
 
@@ -53,7 +56,7 @@ export const userService = {
   deleteUser: async (userId) => {
     const response = await apiClient.delete(API_ENDPOINTS.USER(userId));
     return response.data;
-  },
+  }
 };
 
 export default userService;
