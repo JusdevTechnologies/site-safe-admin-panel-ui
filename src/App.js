@@ -8,8 +8,10 @@ import { ProtectedRoute } from './components/Layout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { DeviceManagement } from './pages/DeviceManagement';
+import { MdmManagement } from './pages/MdmManagement';
 import { UninstallOTP } from './pages/UninstallOTP';
 import { UserManagement } from './pages/UserManagement';
+import { EmployeeManagement } from './pages/EmployeeManagement';
 import { ROUTES } from './constants/routes';
 
 function App() {
@@ -38,6 +40,14 @@ function App() {
             }
           />
           <Route
+            path={ROUTES.MDM_MANAGEMENT}
+            element={
+              <ProtectedRoute>
+                <MdmManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path={ROUTES.UNINSTALL_OTP}
             element={
               <ProtectedRoute>
@@ -50,6 +60,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.EMPLOYEE_MANAGEMENT}
+            element={
+              <ProtectedRoute>
+                <EmployeeManagement />
               </ProtectedRoute>
             }
           />

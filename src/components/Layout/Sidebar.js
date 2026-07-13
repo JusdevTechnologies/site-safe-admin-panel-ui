@@ -11,7 +11,9 @@ import {
   BarChart3,
   Smartphone,
   KeyRound,
-  Users
+  Users,
+  Server,
+  BadgeCheck
 } from "lucide-react";
 import { MENU_ITEMS } from "../../constants/routes";
 import { useAuth } from "../../contexts/AuthContext";
@@ -19,7 +21,9 @@ import { useAuth } from "../../contexts/AuthContext";
 const iconMap = {
   BarChart3: BarChart3,
   Smartphone: Smartphone,
+  Server: Server,
   KeyRound: KeyRound,
+  BadgeCheck: BadgeCheck,
   Users: Users
 };
 

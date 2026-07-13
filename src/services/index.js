@@ -12,3 +12,5 @@ export { dashboardService, default as dashboardServiceDefault } from './dashboar
 export { deviceService, default as deviceServiceDefault } from './deviceService';
 export { otpService, default as otpServiceDefault } from './otpService';
 export { userService, default as userServiceDefault } from './userService';
+export { mdmService, default as mdmServiceDefault } from './mdmService';
+export { employeeService, default as employeeServiceDefault } from './employeeService';

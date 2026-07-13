@@ -34,5 +34,16 @@ export const API_ENDPOINTS = {
 
   // User Management
   USERS: "/admin/users",
-  USER: (userId) => `/admin/users/${userId}`
+  USER: (userId) => `/admin/users/${userId}`,
+
+  // MDM Management
+  MDM_DEVICES: "/admin/mdm/devices",
+  MDM_PROFILES: "/admin/mdm/profiles",
+  MDM_INSTALL_PROFILE: "/admin/mdm/profile/install",
+  MDM_REMOVE_PROFILE: "/admin/mdm/profile/remove",
+  MDM_COMMANDS: "/admin/mdm/commands",
+
+  // Employee Management
+  EMPLOYEES: "/admin/employees",
+  EMPLOYEE: (employeeId) => `/admin/employees/${employeeId}`
 };

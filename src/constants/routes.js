@@ -5,8 +5,10 @@ export const ROUTES = {
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
   DEVICE_MANAGEMENT: '/devices',
+  MDM_MANAGEMENT: '/mdm',
   UNINSTALL_OTP: '/otp',
   USER_MANAGEMENT: '/users',
+  EMPLOYEE_MANAGEMENT: '/employees',
 };
 
 /**
@@ -26,10 +28,22 @@ export const MENU_ITEMS = [
     icon: 'Smartphone',
   },
   {
+    id: 'mdm',
+    label: 'MDM Management',
+    path: ROUTES.MDM_MANAGEMENT,
+    icon: 'Server',
+  },
+  {
     id: 'otp',
     label: 'Uninstall OTP',
     path: ROUTES.UNINSTALL_OTP,
     icon: 'KeyRound',
+  },
+  {
+    id: 'employees',
+    label: 'Employees',
+    path: ROUTES.EMPLOYEE_MANAGEMENT,
+    icon: 'BadgeCheck',
   },
   {
     id: 'users',
