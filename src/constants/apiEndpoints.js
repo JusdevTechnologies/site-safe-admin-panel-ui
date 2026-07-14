@@ -45,5 +45,13 @@ export const API_ENDPOINTS = {
 
   // Employee Management
   EMPLOYEES: "/admin/employees",
-  EMPLOYEE: (employeeId) => `/admin/employees/${employeeId}`
+  EMPLOYEE: (employeeId) => `/admin/employees/${employeeId}`,
+
+  // Apple MDM Management
+  APPLE_MDM_DEVICES: "/admin/apple-mdm/devices",
+  APPLE_MDM_DEVICE: (deviceId) => `/admin/apple-mdm/devices/${deviceId}`,
+  APPLE_MDM_DISABLE_CAMERA: (deviceId) => `/admin/apple-mdm/devices/${deviceId}/camera/disable`,
+  APPLE_MDM_ENABLE_CAMERA: (deviceId) => `/admin/apple-mdm/devices/${deviceId}/camera/enable`,
+  APPLE_MDM_REFRESH: (deviceId) => `/admin/apple-mdm/devices/${deviceId}/refresh`,
+  APPLE_MDM_COMMANDS: (deviceId) => `/admin/apple-mdm/devices/${deviceId}/commands`
 };

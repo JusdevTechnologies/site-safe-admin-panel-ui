@@ -13,7 +13,8 @@ import {
   KeyRound,
   Users,
   Server,
-  BadgeCheck
+  BadgeCheck,
+  Tablet
 } from "lucide-react";
 import { MENU_ITEMS } from "../../constants/routes";
 import { useAuth } from "../../contexts/AuthContext";
@@ -24,7 +25,8 @@ const iconMap = {
   Server: Server,
   KeyRound: KeyRound,
   BadgeCheck: BadgeCheck,
-  Users: Users
+  Users: Users,
+  Tablet: Tablet
 };
 
 function Sidebar() {

@@ -6,6 +6,7 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   DEVICE_MANAGEMENT: '/devices',
   MDM_MANAGEMENT: '/mdm',
+  APPLE_MDM: '/apple-mdm',
   UNINSTALL_OTP: '/otp',
   USER_MANAGEMENT: '/users',
   EMPLOYEE_MANAGEMENT: '/employees',
@@ -32,6 +33,12 @@ export const MENU_ITEMS = [
     label: 'MDM Management',
     path: ROUTES.MDM_MANAGEMENT,
     icon: 'Server',
+  },
+  {
+    id: 'apple-mdm',
+    label: 'Apple MDM Devices',
+    path: ROUTES.APPLE_MDM,
+    icon: 'Tablet',
   },
   {
     id: 'otp',

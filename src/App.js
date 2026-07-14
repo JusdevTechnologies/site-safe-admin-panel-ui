@@ -9,6 +9,7 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { DeviceManagement } from './pages/DeviceManagement';
 import { MdmManagement } from './pages/MdmManagement';
+import AppleMdmManagement from './pages/AppleMdmManagement';
 import { UninstallOTP } from './pages/UninstallOTP';
 import { UserManagement } from './pages/UserManagement';
 import { EmployeeManagement } from './pages/EmployeeManagement';
@@ -44,6 +45,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <MdmManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.APPLE_MDM}
+            element={
+              <ProtectedRoute>
+                <AppleMdmManagement />
               </ProtectedRoute>
             }
           />

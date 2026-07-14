@@ -14,3 +14,4 @@ export { otpService, default as otpServiceDefault } from './otpService';
 export { userService, default as userServiceDefault } from './userService';
 export { mdmService, default as mdmServiceDefault } from './mdmService';
 export { employeeService, default as employeeServiceDefault } from './employeeService';
+export { appleMdmService, default as appleMdmServiceDefault } from './appleMdmService';
