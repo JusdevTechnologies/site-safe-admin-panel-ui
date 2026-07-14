@@ -48,12 +48,12 @@ export const API_ENDPOINTS = {
   EMPLOYEE: (employeeId) => `/admin/employees/${employeeId}`,
 
   // Apple MDM Management
-  APPLE_MDM_DEVICES: "/api/v1/mdm/devices",
-  APPLE_MDM_DEVICE: (deviceId) => `/api/v1/mdm/devices/${deviceId}`,
+  APPLE_MDM_DEVICES: "/mdm/devices",
+  APPLE_MDM_DEVICE: (deviceId) => `/mdm/devices/${deviceId}`,
   APPLE_MDM_DISABLE_CAMERA: (deviceId) =>
-    `/api/v1/mdm/devices/${deviceId}/camera/disable`,
+    `/mdm/devices/${deviceId}/camera/disable`,
   APPLE_MDM_ENABLE_CAMERA: (deviceId) =>
-    `/api/v1/mdm/devices/${deviceId}/camera/enable`,
-  APPLE_MDM_COMMANDS: (deviceId) => `/api/v1/mdm/devices/${deviceId}/commands`,
-  APPLE_MDM_SYNC: "/api/v1/mdm/sync"
+    `/mdm/devices/${deviceId}/camera/enable`,
+  APPLE_MDM_COMMANDS: (deviceId) => `/mdm/devices/${deviceId}/commands`,
+  APPLE_MDM_SYNC: "/mdm/sync"
 };
