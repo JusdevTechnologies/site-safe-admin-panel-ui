@@ -67,6 +67,21 @@ export function useAppleMdm() {
     }
   }, []);
 
+  const syncDevices = useCallback(async () => {
+    setActionLoading(true);
+    try {
+      const result = await appleMdmService.syncDevices();
+      return { success: true, data: result };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to sync devices"
+      };
+    } finally {
+      setActionLoading(false);
+    }
+  }, []);
+
   const fetchCommands = useCallback(async (deviceId, params = {}) => {
     try {
       const data = await appleMdmService.getCommands(deviceId, params);
@@ -90,6 +105,7 @@ export function useAppleMdm() {
     disableCamera,
     enableCamera,
     refreshDevice,
+    syncDevices,
     fetchCommands
   };
 }

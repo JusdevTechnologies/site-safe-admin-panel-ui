@@ -6,6 +6,7 @@ import {
   CameraOff,
   Clock,
   RefreshCw,
+  Cloud,
   X,
   Ban,
   CheckCircle,
@@ -58,6 +59,7 @@ function AppleMdmManagement() {
     disableCamera,
     enableCamera,
     refreshDevice,
+    syncDevices,
     fetchCommands
   } = useAppleMdm();
 
@@ -70,6 +72,8 @@ function AppleMdmManagement() {
   const [drawerTab, setDrawerTab] = useState("details");
   const [deviceCommands, setDeviceCommands] = useState([]);
   const [commandsLoading, setCommandsLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [lastSynced, setLastSynced] = useState(null);
 
   useEffect(() => {
     fetchDevices({ search: searchTerm || undefined });
@@ -98,6 +102,20 @@ function AppleMdmManagement() {
     setShowConfirmModal(false);
     setSelectedDevice(null);
     setConfirmAction(null);
+  };
+
+  const handleSync = async () => {
+    setSyncLoading(true);
+    const result = await syncDevices();
+    setSyncLoading(false);
+
+    if (result?.success) {
+      setLastSynced(new Date().toISOString());
+      setNotification({ type: "success", message: "Devices synced successfully" });
+      fetchDevices({ search: searchTerm || undefined });
+    } else {
+      setNotification({ type: "error", message: result?.error || "Failed to sync devices" });
+    }
   };
 
   const handleConfirmAction = async () => {
@@ -350,24 +368,49 @@ function AppleMdmManagement() {
       </div>
 
       <Card className="mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+          <div className="flex-1 w-full">
             <Input
               placeholder="Search by device name or serial number…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
             />
           </div>
-          <Button variant="outline" className="gap-2" onClick={() => fetchDevices()}>
-            <RefreshCw size={18} /> Refresh
-          </Button>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            {lastSynced && (
+              <span className="text-xs text-gray-400 hidden lg:flex items-center gap-1 shrink-0">
+                <Clock size={12} />
+                Last synced: {formatDateTime(lastSynced)}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              className="gap-2 shrink-0"
+              onClick={handleSync}
+              isLoading={syncLoading}
+              disabled={actionLoading}
+            >
+              <Cloud size={18} /> Sync
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2 shrink-0"
+              onClick={() => fetchDevices()}
+              disabled={actionLoading || syncLoading}
+            >
+              <RefreshCw size={18} /> Refresh
+            </Button>
+          </div>
         </div>
       </Card>
 
       <Card
         title="Apple MDM Devices"
-        subtitle="Manage Apple devices enrolled via MDM"
+        subtitle={
+          lastSynced
+            ? `Manage Apple devices enrolled via MDM · Last synced ${formatDateTime(lastSynced)}`
+            : "Manage Apple devices enrolled via MDM"
+        }
       >
         {loading ? (
           <div className="py-12 text-center text-gray-400">

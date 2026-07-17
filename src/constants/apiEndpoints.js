@@ -56,6 +56,7 @@ export const API_ENDPOINTS = {
     `/mdm/devices/${deviceId}/camera/disable`,
   APPLE_MDM_ENABLE_CAMERA: (deviceId) =>
     `/mdm/devices/${deviceId}/camera/enable`,
+  APPLE_MDM_REFRESH: (deviceId) => `/mdm/devices/${deviceId}/refresh`,
   APPLE_MDM_COMMANDS: (deviceId) => `/mdm/devices/${deviceId}/commands`,
   APPLE_MDM_SYNC: "/mdm/sync"
 };

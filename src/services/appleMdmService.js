@@ -32,6 +32,11 @@ export const appleMdmService = {
   getCommands: async (deviceId, params = {}) => {
     const response = await apiClient.get(API_ENDPOINTS.APPLE_MDM_COMMANDS(deviceId), { params });
     return { commands: response.data.data?.commands ?? response.data.data ?? [], meta: response.data.meta };
+  },
+
+  syncDevices: async () => {
+    const response = await apiClient.post(API_ENDPOINTS.APPLE_MDM_SYNC);
+    return extractData(response);
   }
 };
 
