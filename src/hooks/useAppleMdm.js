@@ -1,9 +1,14 @@
 import { useState, useCallback } from "react";
 import appleMdmService from "../services/appleMdmService";
+import mdmService from "../services/mdmService";
 
 export function useAppleMdm() {
   const [devices, setDevices] = useState([]);
-  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20 });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 20
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -16,7 +21,11 @@ export function useAppleMdm() {
       setDevices(data?.devices ?? []);
       if (data?.meta) setPagination(data.meta);
     } catch (err) {
-      setError(err.response?.data?.error?.message || err.message || "Failed to load Apple MDM devices");
+      setError(
+        err.response?.data?.error?.message ||
+          err.message ||
+          "Failed to load Apple MDM devices"
+      );
     } finally {
       setLoading(false);
     }
@@ -30,7 +39,11 @@ export function useAppleMdm() {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to disable camera"
+        error:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to disable camera"
       };
     } finally {
       setActionLoading(false);
@@ -45,7 +58,11 @@ export function useAppleMdm() {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to enable camera"
+        error:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to enable camera"
       };
     } finally {
       setActionLoading(false);
@@ -60,7 +77,11 @@ export function useAppleMdm() {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to refresh device"
+        error:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to refresh device"
       };
     } finally {
       setActionLoading(false);
@@ -75,7 +96,11 @@ export function useAppleMdm() {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to sync devices"
+        error:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to sync devices"
       };
     } finally {
       setActionLoading(false);
@@ -85,13 +110,39 @@ export function useAppleMdm() {
   const fetchCommands = useCallback(async (deviceId, params = {}) => {
     try {
       const data = await appleMdmService.getCommands(deviceId, params);
-      return { success: true, commands: data?.commands ?? [], meta: data?.meta };
+      return {
+        success: true,
+        commands: data?.commands ?? [],
+        meta: data?.meta
+      };
     } catch (err) {
       return {
         success: false,
         commands: [],
-        error: err.response?.data?.error?.message || err.message || "Failed to load commands"
+        error:
+          err.response?.data?.error?.message ||
+          err.message ||
+          "Failed to load commands"
       };
+    }
+  }, []);
+
+  const toggleMdmRemovable = useCallback(async (deviceId, removable) => {
+    setActionLoading(true);
+    try {
+      const result = await mdmService.toggleMdmRemovable(deviceId, removable);
+      return { success: true, data: result };
+    } catch (err) {
+      return {
+        success: false,
+        error:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to toggle MDM removable"
+      };
+    } finally {
+      setActionLoading(false);
     }
   }, []);
 
@@ -106,7 +157,8 @@ export function useAppleMdm() {
     enableCamera,
     refreshDevice,
     syncDevices,
-    fetchCommands
+    fetchCommands,
+    toggleMdmRemovable
   };
 }
 
