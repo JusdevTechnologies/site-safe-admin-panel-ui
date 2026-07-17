@@ -11,7 +11,10 @@ import {
   X,
   AlertTriangle,
   Lock,
-  ShieldOff
+  ShieldOff,
+  Smartphone,
+  Info,
+  Wifi
 } from "lucide-react";
 import { MainLayout } from "../../components/Layout";
 import {
@@ -66,6 +69,7 @@ function MdmManagement() {
   const [showToggleRemovableModal, setShowToggleRemovableModal] =
     useState(false);
   const [toggleRemovableValue, setToggleRemovableValue] = useState(true);
+  const [isNonADE, setIsNonADE] = useState(false);
 
   useEffect(() => {
     if (activeTab === "devices")
@@ -163,12 +167,16 @@ function MdmManagement() {
   const openToggleRemovableModal = (device) => {
     setSelectedDevice(device);
     setToggleRemovableValue(true);
+    const isAde =
+      device.supervised === true || device.enrollment_type === "device";
+    setIsNonADE(!isAde);
     setShowToggleRemovableModal(true);
   };
 
   const closeToggleRemovableModal = () => {
     setShowToggleRemovableModal(false);
     setSelectedDevice(null);
+    setIsNonADE(false);
   };
 
   const handleToggleMdmRemovable = async () => {
@@ -203,7 +211,23 @@ function MdmManagement() {
     {
       key: "platform",
       label: "Platform",
-      render: (row) => row.platform ?? (row.os_version ? "ios" : "—")
+      render: (row) => {
+        const isIOS =
+          (row.platform ?? "").toLowerCase() === "ios" ||
+          row.model?.toLowerCase().includes("iphone") ||
+          row.model?.toLowerCase().includes("ipad") ||
+          (row.os_version && !row.platform);
+        return (
+          <div className="flex items-center gap-1.5">
+            {isIOS ? (
+              <Smartphone size={14} className="text-gray-400" />
+            ) : (
+              <Monitor size={14} className="text-gray-400" />
+            )}
+            <span>{isIOS ? "iOS" : (row.platform ?? "—")}</span>
+          </div>
+        );
+      }
     },
     {
       key: "os_version",
@@ -212,34 +236,132 @@ function MdmManagement() {
     },
     { key: "model", label: "Model", render: (row) => row.model ?? "—" },
     {
-      key: "supervised",
-      label: "Supervised",
-      render: (row) =>
-        row.supervised ? (
-          <Badge variant="success">Yes</Badge>
-        ) : (
-          <Badge variant="secondary">No</Badge>
-        )
+      key: "enrollment",
+      label: "Enrollment",
+      render: (row) => {
+        const isAde =
+          row.supervised === true || row.enrollment_type === "device";
+        const enrollmentStatus = row.enrollment_status;
+        return (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5">
+              {isAde ? (
+                <Badge variant="success" size="sm">
+                  ADE / DEP
+                </Badge>
+              ) : (
+                <Badge variant="warning" size="sm">
+                  Direct Profile
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              {isAde ? (
+                <>
+                  <Lock size={10} />
+                  <span>Supervised</span>
+                </>
+              ) : (
+                <>
+                  <ShieldOff size={10} />
+                  <span>Not Supervised</span>
+                </>
+              )}
+              {enrollmentStatus && (
+                <span className="text-gray-400">· {enrollmentStatus}</span>
+              )}
+            </div>
+          </div>
+        );
+      }
     },
     {
-      key: "last_seen",
-      label: "Last Seen",
-      render: (row) => (row.last_seen ? formatDateTime(row.last_seen) : "—")
+      key: "camera_status",
+      label: "Camera",
+      render: (row) => {
+        const status = row.camera_status;
+        const state = row.camera_state;
+        if (status === "enabled" || state === "unrestricted") {
+          return (
+            <Badge variant="success" size="sm">
+              Enabled
+            </Badge>
+          );
+        }
+        if (status === "disabled" || state === "restricted") {
+          return (
+            <Badge variant="danger" size="sm">
+              Blocked
+            </Badge>
+          );
+        }
+        return (
+          <Badge variant="secondary" size="sm">
+            Unknown
+          </Badge>
+        );
+      }
+    },
+    {
+      key: "push_token_status",
+      label: "Push Token",
+      render: (row) => {
+        const status = row.push_token_status;
+        return status === "valid" ? (
+          <Badge variant="success" size="sm">
+            Valid
+          </Badge>
+        ) : status === "invalid" ? (
+          <Badge variant="danger" size="sm">
+            Invalid
+          </Badge>
+        ) : status ? (
+          <Badge size="sm">{status}</Badge>
+        ) : (
+          "—"
+        );
+      }
+    },
+    {
+      key: "last_sync_at",
+      label: "Last Sync",
+      render: (row) =>
+        row.last_sync_at ? (
+          <div className="flex items-center gap-1.5">
+            <Wifi size={12} className="text-gray-400" />
+            <span>{formatDateTime(row.last_sync_at)}</span>
+          </div>
+        ) : row.last_seen ? (
+          formatDateTime(row.last_seen)
+        ) : (
+          "—"
+        )
     },
     {
       key: "actions",
       label: "Actions",
       render: (row) => {
-        const isIOS = (row.platform ?? "").toLowerCase() === "ios";
+        const isIOS =
+          (row.platform ?? "").toLowerCase() === "ios" ||
+          row.model?.toLowerCase().includes("iphone") ||
+          row.model?.toLowerCase().includes("ipad") ||
+          (row.os_version && !row.platform);
+        const isAde =
+          row.supervised === true || row.enrollment_type === "device";
         return (
           <div className="flex gap-2">
             {isIOS && (
               <Button
-                variant="secondary"
+                variant={isAde ? "secondary" : "outline"}
                 size="sm"
-                className="text-xs gap-1"
+                className={`text-xs gap-1 ${!isAde ? "opacity-60" : ""}`}
                 disabled={actionLoading}
                 onClick={() => openToggleRemovableModal(row)}
+                title={
+                  !isAde
+                    ? "Toggle MDM Removable is only available for ADE/DEP-enrolled devices"
+                    : ""
+                }
               >
                 <Lock size={14} /> MDM
               </Button>
@@ -664,67 +786,136 @@ function MdmManagement() {
               <strong>UDID:</strong> {selectedDevice?.udid ?? "—"}
             </p>
             <p className="text-sm text-gray-700">
-              <strong>Platform:</strong> {selectedDevice?.platform ?? "—"}
+              <strong>Platform:</strong> {selectedDevice?.platform ?? "iOS"}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong>Enrollment:</strong>{" "}
+              {selectedDevice?.supervised === true ||
+              selectedDevice?.enrollment_type === "device"
+                ? "ADE / DEP (Supervised)"
+                : "Direct Profile (Not Supervised)"}
             </p>
           </div>
 
-          <p className="text-gray-700">
-            Control whether the <strong>"Leave Remote Management"</strong>{" "}
-            option is visible on this iOS device.
-          </p>
+          {isNonADE ? (
+            <>
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+                <Info size={20} className="text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800 mb-1">
+                    Feature unavailable for this device
+                  </p>
+                  <p className="text-sm text-amber-700">
+                    Toggle MDM Removable is only available for{" "}
+                    <strong>ADE / DEP-enrolled devices</strong> that are
+                    supervised. This device was enrolled via{" "}
+                    <strong>direct profile download</strong> and is not
+                    supervised.
+                  </p>
+                  <p className="text-sm text-amber-700 mt-2">
+                    To use this feature, the device must be reset, added to
+                    Apple Business Manager (ABM), and re-enrolled via ADE.
+                  </p>
+                </div>
+              </div>
 
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setToggleRemovableValue(false)}
-              className={`flex-1 p-4 rounded-lg border-2 text-center transition-all ${
-                toggleRemovableValue === false
-                  ? "border-red-500 bg-red-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
-              }`}
-            >
-              <Lock
-                size={24}
-                className={`mx-auto mb-2 ${toggleRemovableValue === false ? "text-red-600" : "text-gray-400"}`}
-              />
-              <p
-                className={`text-sm font-semibold ${toggleRemovableValue === false ? "text-red-700" : "text-gray-600"}`}
-              >
-                Non-Removable
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Two enrollment flows for iPhone:
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <div className="w-5 h-5 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                      1
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">
+                        ADE / DEP Enrollment
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Device is reset, supervised, added to ABM. Enrolment
+                        profile can be made non-removable.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                      2
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">
+                        Direct Profile Download
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Device is not reset, not supervised. Enrolment can be
+                        removed by the user.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-700">
+                Control whether the <strong>"Leave Remote Management"</strong>{" "}
+                option is visible on this iOS device.
               </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Hide "Leave Remote Management"
-              </p>
-            </button>
-            <button
-              type="button"
-              onClick={() => setToggleRemovableValue(true)}
-              className={`flex-1 p-4 rounded-lg border-2 text-center transition-all ${
-                toggleRemovableValue === true
-                  ? "border-green-500 bg-green-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
-              }`}
-            >
-              <ShieldOff
-                size={24}
-                className={`mx-auto mb-2 ${toggleRemovableValue === true ? "text-green-600" : "text-gray-400"}`}
-              />
-              <p
-                className={`text-sm font-semibold ${toggleRemovableValue === true ? "text-green-700" : "text-gray-600"}`}
-              >
-                Removable
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Show "Leave Remote Management"
-              </p>
-            </button>
-          </div>
 
-          <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg flex items-start gap-2">
-            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-            The change takes effect after the device processes the MDM Settings
-            command. The device must be online.
-          </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setToggleRemovableValue(false)}
+                  className={`flex-1 p-4 rounded-lg border-2 text-center transition-all ${
+                    toggleRemovableValue === false
+                      ? "border-red-500 bg-red-50"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
+                >
+                  <Lock
+                    size={24}
+                    className={`mx-auto mb-2 ${toggleRemovableValue === false ? "text-red-600" : "text-gray-400"}`}
+                  />
+                  <p
+                    className={`text-sm font-semibold ${toggleRemovableValue === false ? "text-red-700" : "text-gray-600"}`}
+                  >
+                    Non-Removable
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Hide "Leave Remote Management"
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setToggleRemovableValue(true)}
+                  className={`flex-1 p-4 rounded-lg border-2 text-center transition-all ${
+                    toggleRemovableValue === true
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
+                >
+                  <ShieldOff
+                    size={24}
+                    className={`mx-auto mb-2 ${toggleRemovableValue === true ? "text-green-600" : "text-gray-400"}`}
+                  />
+                  <p
+                    className={`text-sm font-semibold ${toggleRemovableValue === true ? "text-green-700" : "text-gray-600"}`}
+                  >
+                    Removable
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Show "Leave Remote Management"
+                  </p>
+                </button>
+              </div>
+
+              <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg flex items-start gap-2">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                The change takes effect after the device processes the MDM
+                Settings command. The device must be online.
+              </p>
+            </>
+          )}
         </div>
         <div className="flex gap-3 mt-6">
           <Button
@@ -732,16 +923,18 @@ function MdmManagement() {
             onClick={closeToggleRemovableModal}
             disabled={actionLoading}
           >
-            Cancel
+            {isNonADE ? "Close" : "Cancel"}
           </Button>
-          <Button
-            variant={toggleRemovableValue ? "success" : "danger"}
-            onClick={handleToggleMdmRemovable}
-            isLoading={actionLoading}
-          >
-            <Lock size={16} />{" "}
-            {toggleRemovableValue ? "Set Removable" : "Set Non-Removable"}
-          </Button>
+          {!isNonADE && (
+            <Button
+              variant={toggleRemovableValue ? "success" : "danger"}
+              onClick={handleToggleMdmRemovable}
+              isLoading={actionLoading}
+            >
+              <Lock size={16} />{" "}
+              {toggleRemovableValue ? "Set Removable" : "Set Non-Removable"}
+            </Button>
+          )}
         </div>
       </Modal>
     </MainLayout>
