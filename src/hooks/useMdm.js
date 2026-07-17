@@ -8,7 +8,11 @@ export function useMdm() {
   const [devices, setDevices] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const [commands, setCommands] = useState([]);
-  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20 });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 20
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -21,7 +25,11 @@ export function useMdm() {
       setDevices(data?.devices ?? []);
       if (data?.meta) setPagination(data.meta);
     } catch (err) {
-      setError(err.response?.data?.error?.message || err.message || "Failed to load MDM devices");
+      setError(
+        err.response?.data?.error?.message ||
+          err.message ||
+          "Failed to load MDM devices"
+      );
     } finally {
       setLoading(false);
     }
@@ -35,7 +43,11 @@ export function useMdm() {
       setProfiles(data?.profiles ?? []);
       if (data?.meta) setPagination(data.meta);
     } catch (err) {
-      setError(err.response?.data?.error?.message || err.message || "Failed to load MDM profiles");
+      setError(
+        err.response?.data?.error?.message ||
+          err.message ||
+          "Failed to load MDM profiles"
+      );
     } finally {
       setLoading(false);
     }
@@ -49,7 +61,11 @@ export function useMdm() {
       setCommands(data?.commands ?? []);
       if (data?.meta) setPagination(data.meta);
     } catch (err) {
-      setError(err.response?.data?.error?.message || err.message || "Failed to load MDM commands");
+      setError(
+        err.response?.data?.error?.message ||
+          err.message ||
+          "Failed to load MDM commands"
+      );
     } finally {
       setLoading(false);
     }
@@ -63,7 +79,11 @@ export function useMdm() {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to install profile"
+        error:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to install profile"
       };
     } finally {
       setActionLoading(false);
@@ -78,7 +98,30 @@ export function useMdm() {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to remove profile"
+        error:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to remove profile"
+      };
+    } finally {
+      setActionLoading(false);
+    }
+  }, []);
+
+  const toggleMdmRemovable = useCallback(async (deviceId, removable) => {
+    setActionLoading(true);
+    try {
+      const result = await mdmService.toggleMdmRemovable(deviceId, removable);
+      return { success: true, data: result };
+    } catch (err) {
+      return {
+        success: false,
+        error:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to toggle MDM removable"
       };
     } finally {
       setActionLoading(false);
@@ -97,7 +140,8 @@ export function useMdm() {
     fetchProfiles,
     fetchCommands,
     installProfile,
-    removeProfile
+    removeProfile,
+    toggleMdmRemovable
   };
 }
 

@@ -9,10 +9,19 @@ import {
   Download,
   Trash2,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Lock,
+  ShieldOff
 } from "lucide-react";
 import { MainLayout } from "../../components/Layout";
-import { Card, Table, Badge, Button, Input, Modal } from "../../components/Common";
+import {
+  Card,
+  Table,
+  Badge,
+  Button,
+  Input,
+  Modal
+} from "../../components/Common";
 import { formatDateTime } from "../../utils/helpers";
 import useMdm from "../../hooks/useMdm";
 
@@ -32,8 +41,18 @@ const COMMAND_STATUS_MAP = {
 function MdmManagement() {
   const [activeTab, setActiveTab] = useState("devices");
   const {
-    devices, profiles, commands, loading, error, actionLoading,
-    fetchDevices, fetchProfiles, fetchCommands, installProfile, removeProfile
+    devices,
+    profiles,
+    commands,
+    loading,
+    error,
+    actionLoading,
+    fetchDevices,
+    fetchProfiles,
+    fetchCommands,
+    installProfile,
+    removeProfile,
+    toggleMdmRemovable
   } = useMdm();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,9 +63,13 @@ function MdmManagement() {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [showToggleRemovableModal, setShowToggleRemovableModal] =
+    useState(false);
+  const [toggleRemovableValue, setToggleRemovableValue] = useState(true);
 
   useEffect(() => {
-    if (activeTab === "devices") fetchDevices({ search: searchTerm || undefined });
+    if (activeTab === "devices")
+      fetchDevices({ search: searchTerm || undefined });
     else if (activeTab === "profiles") fetchProfiles();
     else if (activeTab === "commands") {
       fetchCommands({
@@ -55,7 +78,15 @@ function MdmManagement() {
         commandType: commandTypeFilter || undefined
       });
     }
-  }, [activeTab, fetchDevices, fetchProfiles, fetchCommands, searchTerm, statusFilter, commandTypeFilter]);
+  }, [
+    activeTab,
+    fetchDevices,
+    fetchProfiles,
+    fetchCommands,
+    searchTerm,
+    statusFilter,
+    commandTypeFilter
+  ]);
 
   useEffect(() => {
     if (!notification) return;
@@ -85,108 +116,236 @@ function MdmManagement() {
 
   const handleInstallProfile = async () => {
     if (!selectedDevice) return;
-    const result = await installProfile(
-      selectedDevice.udid,
-      {
-        PayloadIdentifier: "com.sitesafe.camera.restriction",
-        PayloadType: "Configuration",
-        PayloadDisplayName: "Camera Restriction Policy",
-        PayloadDescription: "Restricts device camera access",
-        PayloadOrganization: "SiteSafe",
-        PayloadContent: [
-          {
-            PayloadType: "com.apple.applicationaccess",
-            PayloadIdentifier: "com.sitesafe.camera.restriction.policy",
-            PayloadUUID: crypto.randomUUID?.() || "policy-" + Date.now(),
-            PayloadVersion: 1,
-            PayloadContent: { allowCamera: false }
-          }
-        ]
-      }
-    );
+    const result = await installProfile(selectedDevice.udid, {
+      PayloadIdentifier: "com.sitesafe.camera.restriction",
+      PayloadType: "Configuration",
+      PayloadDisplayName: "Camera Restriction Policy",
+      PayloadDescription: "Restricts device camera access",
+      PayloadOrganization: "SiteSafe",
+      PayloadContent: [
+        {
+          PayloadType: "com.apple.applicationaccess",
+          PayloadIdentifier: "com.sitesafe.camera.restriction.policy",
+          PayloadUUID: crypto.randomUUID?.() || "policy-" + Date.now(),
+          PayloadVersion: 1,
+          PayloadContent: { allowCamera: false }
+        }
+      ]
+    });
     closeInstallModal();
     setNotification(
       result.success
-        ? { type: "success", message: "Profile install command sent successfully" }
+        ? {
+            type: "success",
+            message: "Profile install command sent successfully"
+          }
         : { type: "error", message: result.error }
     );
   };
 
   const handleRemoveProfile = async () => {
     if (!selectedDevice) return;
-    const result = await removeProfile(selectedDevice.udid, "com.sitesafe.camera.restriction");
+    const result = await removeProfile(
+      selectedDevice.udid,
+      "com.sitesafe.camera.restriction"
+    );
     closeRemoveModal();
     setNotification(
       result.success
-        ? { type: "success", message: "Profile removal command sent successfully" }
+        ? {
+            type: "success",
+            message: "Profile removal command sent successfully"
+          }
         : { type: "error", message: result.error }
     );
   };
 
+  const openToggleRemovableModal = (device) => {
+    setSelectedDevice(device);
+    setToggleRemovableValue(true);
+    setShowToggleRemovableModal(true);
+  };
+
+  const closeToggleRemovableModal = () => {
+    setShowToggleRemovableModal(false);
+    setSelectedDevice(null);
+  };
+
+  const handleToggleMdmRemovable = async () => {
+    if (!selectedDevice) return;
+    const deviceId = selectedDevice.id || selectedDevice.udid;
+    const result = await toggleMdmRemovable(deviceId, toggleRemovableValue);
+    closeToggleRemovableModal();
+    setNotification(
+      result.success
+        ? {
+            type: "success",
+            message: toggleRemovableValue
+              ? "MDM profile set to removable"
+              : "MDM profile set to non-removable"
+          }
+        : { type: "error", message: result.error }
+    );
+    if (result.success) fetchDevices({ search: searchTerm || undefined });
+  };
+
   const deviceColumns = [
-    { key: "device_name", label: "Device Name", render: (row) => row.device_name ?? row.udid?.slice(0, 8) ?? "—" },
-    { key: "serial_number", label: "Serial", render: (row) => row.serial_number ?? "—" },
-    { key: "platform", label: "Platform", render: (row) => row.platform ?? (row.os_version ? "ios" : "—") },
-    { key: "os_version", label: "OS Version", render: (row) => row.os_version ?? "—" },
+    {
+      key: "device_name",
+      label: "Device Name",
+      render: (row) => row.device_name ?? row.udid?.slice(0, 8) ?? "—"
+    },
+    {
+      key: "serial_number",
+      label: "Serial",
+      render: (row) => row.serial_number ?? "—"
+    },
+    {
+      key: "platform",
+      label: "Platform",
+      render: (row) => row.platform ?? (row.os_version ? "ios" : "—")
+    },
+    {
+      key: "os_version",
+      label: "OS Version",
+      render: (row) => row.os_version ?? "—"
+    },
     { key: "model", label: "Model", render: (row) => row.model ?? "—" },
     {
       key: "supervised",
       label: "Supervised",
-      render: (row) => row.supervised ? <Badge variant="success">Yes</Badge> : <Badge variant="secondary">No</Badge>
+      render: (row) =>
+        row.supervised ? (
+          <Badge variant="success">Yes</Badge>
+        ) : (
+          <Badge variant="secondary">No</Badge>
+        )
     },
     {
       key: "last_seen",
       label: "Last Seen",
-      render: (row) => row.last_seen ? formatDateTime(row.last_seen) : "—"
+      render: (row) => (row.last_seen ? formatDateTime(row.last_seen) : "—")
     },
     {
       key: "actions",
       label: "Actions",
-      render: (row) => (
-        <div className="flex gap-2">
-          <Button variant="primary" size="sm" className="text-xs gap-1" disabled={actionLoading} onClick={() => openInstallModal(row)}>
-            <Download size={14} /> Install
-          </Button>
-          <Button variant="danger" size="sm" className="text-xs gap-1" disabled={actionLoading} onClick={() => openRemoveModal(row)}>
-            <Trash2 size={14} /> Remove
-          </Button>
-        </div>
-      )
+      render: (row) => {
+        const isIOS = (row.platform ?? "").toLowerCase() === "ios";
+        return (
+          <div className="flex gap-2">
+            {isIOS && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="text-xs gap-1"
+                disabled={actionLoading}
+                onClick={() => openToggleRemovableModal(row)}
+              >
+                <Lock size={14} /> MDM
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              size="sm"
+              className="text-xs gap-1"
+              disabled={actionLoading}
+              onClick={() => openInstallModal(row)}
+            >
+              <Download size={14} /> Install
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              className="text-xs gap-1"
+              disabled={actionLoading}
+              onClick={() => openRemoveModal(row)}
+            >
+              <Trash2 size={14} /> Remove
+            </Button>
+          </div>
+        );
+      }
     }
   ];
 
   const profileColumns = [
-    { key: "identifier", label: "Identifier", render: (row) => row.identifier ?? row.PayloadIdentifier ?? "—" },
-    { key: "display_name", label: "Display Name", render: (row) => row.display_name ?? row.PayloadDisplayName ?? "—" },
-    { key: "description", label: "Description", render: (row) => row.description ?? row.PayloadDescription ?? "—" },
-    { key: "version", label: "Version", render: (row) => row.version ?? row.PayloadVersion ?? 1 },
-    { key: "organization", label: "Organization", render: (row) => row.organization ?? row.PayloadOrganization ?? "—" }
+    {
+      key: "identifier",
+      label: "Identifier",
+      render: (row) => row.identifier ?? row.PayloadIdentifier ?? "—"
+    },
+    {
+      key: "display_name",
+      label: "Display Name",
+      render: (row) => row.display_name ?? row.PayloadDisplayName ?? "—"
+    },
+    {
+      key: "description",
+      label: "Description",
+      render: (row) => row.description ?? row.PayloadDescription ?? "—"
+    },
+    {
+      key: "version",
+      label: "Version",
+      render: (row) => row.version ?? row.PayloadVersion ?? 1
+    },
+    {
+      key: "organization",
+      label: "Organization",
+      render: (row) => row.organization ?? row.PayloadOrganization ?? "—"
+    }
   ];
 
   const getCommandStatusBadge = (status) => {
     const map = COMMAND_STATUS_MAP[status?.toLowerCase()];
-    return map ? <Badge variant={map.variant}>{map.label}</Badge> : <Badge>{status}</Badge>;
+    return map ? (
+      <Badge variant={map.variant}>{map.label}</Badge>
+    ) : (
+      <Badge>{status}</Badge>
+    );
   };
 
   const commandColumns = [
-    { key: "commandUuid", label: "Command UUID", render: (row) => row.commandUuid?.slice(0, 12) + "…" ?? "—" },
-    { key: "commandType", label: "Type", render: (row) => row.commandType ?? "—" },
-    { key: "deviceIdentifier", label: "Device UDID", render: (row) => row.deviceIdentifier?.slice(0, 12) + "…" ?? "—" },
-    { key: "status", label: "Status", render: (row) => getCommandStatusBadge(row.status) },
+    {
+      key: "commandUuid",
+      label: "Command UUID",
+      render: (row) => row.commandUuid?.slice(0, 12) + "…" ?? "—"
+    },
+    {
+      key: "commandType",
+      label: "Type",
+      render: (row) => row.commandType ?? "—"
+    },
+    {
+      key: "deviceIdentifier",
+      label: "Device UDID",
+      render: (row) => row.deviceIdentifier?.slice(0, 12) + "…" ?? "—"
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (row) => getCommandStatusBadge(row.status)
+    },
     {
       key: "queuedAt",
       label: "Queued",
-      render: (row) => row.queuedAt ? formatDateTime(row.queuedAt) : "—"
+      render: (row) => (row.queuedAt ? formatDateTime(row.queuedAt) : "—")
     },
     {
       key: "acknowledgedAt",
       label: "Acknowledged",
-      render: (row) => row.acknowledgedAt ? formatDateTime(row.acknowledgedAt) : "—"
+      render: (row) =>
+        row.acknowledgedAt ? formatDateTime(row.acknowledgedAt) : "—"
     },
     {
       key: "errorMessage",
       label: "Error",
-      render: (row) => row.errorMessage ? <span className="text-red-600 text-sm">{row.errorMessage}</span> : "—"
+      render: (row) =>
+        row.errorMessage ? (
+          <span className="text-red-600 text-sm">{row.errorMessage}</span>
+        ) : (
+          "—"
+        )
     }
   ];
 
@@ -195,7 +354,9 @@ function MdmManagement() {
       return (
         <div className="py-16 text-center text-gray-400">
           <div className="w-8 h-8 border-3 border-blue-200 border-t-blue-800 rounded-full animate-spin mx-auto mb-3" />
-          Loading {TABS.find(t => t.id === activeTab)?.label?.toLowerCase() ?? "data"}…
+          Loading{" "}
+          {TABS.find((t) => t.id === activeTab)?.label?.toLowerCase() ?? "data"}
+          …
         </div>
       );
     }
@@ -204,7 +365,9 @@ function MdmManagement() {
       return (
         <Card title="NanoMDM Devices" subtitle="Devices enrolled in MDM server">
           {devices.length === 0 ? (
-            <div className="py-12 text-center text-gray-400">No MDM devices found</div>
+            <div className="py-12 text-center text-gray-400">
+              No MDM devices found
+            </div>
           ) : (
             <Table columns={deviceColumns} data={devices} />
           )}
@@ -214,9 +377,14 @@ function MdmManagement() {
 
     if (activeTab === "profiles") {
       return (
-        <Card title="Configuration Profiles" subtitle="Profiles available in NanoMDM">
+        <Card
+          title="Configuration Profiles"
+          subtitle="Profiles available in NanoMDM"
+        >
           {profiles.length === 0 ? (
-            <div className="py-12 text-center text-gray-400">No profiles found</div>
+            <div className="py-12 text-center text-gray-400">
+              No profiles found
+            </div>
           ) : (
             <Table columns={profileColumns} data={profiles} />
           )}
@@ -226,9 +394,14 @@ function MdmManagement() {
 
     if (activeTab === "commands") {
       return (
-        <Card title="MDM Commands" subtitle="Track profile install/remove operations">
+        <Card
+          title="MDM Commands"
+          subtitle="Track profile install/remove operations"
+        >
           {commands.length === 0 ? (
-            <div className="py-12 text-center text-gray-400">No commands found</div>
+            <div className="py-12 text-center text-gray-400">
+              No commands found
+            </div>
           ) : (
             <Table columns={commandColumns} data={commands} />
           )}
@@ -250,7 +423,10 @@ function MdmManagement() {
           }`}
         >
           {notification.message}
-          <button onClick={() => setNotification(null)} className="ml-4 hover:opacity-70">
+          <button
+            onClick={() => setNotification(null)}
+            className="ml-4 hover:opacity-70"
+          >
             <X size={14} />
           </button>
         </div>
@@ -259,11 +435,15 @@ function MdmManagement() {
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between">
           <span>{error}</span>
-          <Button variant="outline" size="sm" onClick={() => {
-            if (activeTab === "devices") fetchDevices();
-            else if (activeTab === "profiles") fetchProfiles();
-            else fetchCommands();
-          }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (activeTab === "devices") fetchDevices();
+              else if (activeTab === "profiles") fetchProfiles();
+              else fetchCommands();
+            }}
+          >
             <RefreshCw size={14} /> Retry
           </Button>
         </div>
@@ -276,7 +456,12 @@ function MdmManagement() {
           return (
             <button
               key={tab.id}
-              onClick={() => { setActiveTab(tab.id); setSearchTerm(""); setStatusFilter(""); setCommandTypeFilter(""); }}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setSearchTerm("");
+                setStatusFilter("");
+                setCommandTypeFilter("");
+              }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? "bg-blue-800 text-white shadow-sm"
@@ -337,19 +522,27 @@ function MdmManagement() {
                 </select>
               </>
             )}
-            <Button variant="outline" className="gap-2" onClick={() => {
-              setSearchTerm("");
-              setStatusFilter("");
-              setCommandTypeFilter("");
-              if (activeTab === "devices") fetchDevices();
-              else fetchCommands();
-            }}>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("");
+                setCommandTypeFilter("");
+                if (activeTab === "devices") fetchDevices();
+                else fetchCommands();
+              }}
+            >
               <Filter size={18} /> Clear
             </Button>
-            <Button variant="outline" className="gap-2" onClick={() => {
-              if (activeTab === "devices") fetchDevices();
-              else fetchCommands();
-            }}>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                if (activeTab === "devices") fetchDevices();
+                else fetchCommands();
+              }}
+            >
               <RefreshCw size={18} /> Refresh
             </Button>
           </div>
@@ -359,15 +552,27 @@ function MdmManagement() {
       {renderTabContent()}
 
       {/* Install Profile Modal */}
-      <Modal isOpen={showInstallModal} onClose={closeInstallModal} title="Install Profile" size="lg">
+      <Modal
+        isOpen={showInstallModal}
+        onClose={closeInstallModal}
+        title="Install Profile"
+        size="lg"
+      >
         <div className="space-y-4">
           <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-700"><strong>Device:</strong> {selectedDevice?.device_name ?? "—"}</p>
-            <p className="text-sm text-gray-700"><strong>UDID:</strong> {selectedDevice?.udid ?? "—"}</p>
-            <p className="text-sm text-gray-700"><strong>Model:</strong> {selectedDevice?.model ?? "—"}</p>
+            <p className="text-sm text-gray-700">
+              <strong>Device:</strong> {selectedDevice?.device_name ?? "—"}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong>UDID:</strong> {selectedDevice?.udid ?? "—"}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong>Model:</strong> {selectedDevice?.model ?? "—"}
+            </p>
           </div>
           <p className="text-gray-700">
-            This will install the <strong>Camera Restriction Policy</strong> profile on the device via NanoMDM.
+            This will install the <strong>Camera Restriction Policy</strong>{" "}
+            profile on the device via NanoMDM.
           </p>
           <div className="bg-gray-50 p-4 rounded-lg text-sm space-y-1 font-mono text-gray-600">
             <p>Profile: Camera Restriction Policy</p>
@@ -376,36 +581,166 @@ function MdmManagement() {
           </div>
           <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg flex items-start gap-2">
             <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-            The profile will be pushed to the device immediately. The device must be online to receive the command.
+            The profile will be pushed to the device immediately. The device
+            must be online to receive the command.
           </p>
         </div>
         <div className="flex gap-3 mt-6">
-          <Button variant="secondary" onClick={closeInstallModal} disabled={actionLoading}>Cancel</Button>
-          <Button variant="primary" onClick={handleInstallProfile} isLoading={actionLoading}>
+          <Button
+            variant="secondary"
+            onClick={closeInstallModal}
+            disabled={actionLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleInstallProfile}
+            isLoading={actionLoading}
+          >
             <Download size={16} /> Install Profile
           </Button>
         </div>
       </Modal>
 
       {/* Remove Profile Modal */}
-      <Modal isOpen={showRemoveModal} onClose={closeRemoveModal} title="Remove Profile" size="lg">
+      <Modal
+        isOpen={showRemoveModal}
+        onClose={closeRemoveModal}
+        title="Remove Profile"
+        size="lg"
+      >
         <div className="space-y-4">
           <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-700"><strong>Device:</strong> {selectedDevice?.device_name ?? "—"}</p>
-            <p className="text-sm text-gray-700"><strong>UDID:</strong> {selectedDevice?.udid ?? "—"}</p>
+            <p className="text-sm text-gray-700">
+              <strong>Device:</strong> {selectedDevice?.device_name ?? "—"}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong>UDID:</strong> {selectedDevice?.udid ?? "—"}
+            </p>
           </div>
           <p className="text-gray-700">
-            This will remove the <strong>Camera Restriction Policy</strong> profile from the device. The camera will be re-enabled.
+            This will remove the <strong>Camera Restriction Policy</strong>{" "}
+            profile from the device. The camera will be re-enabled.
           </p>
           <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg flex items-start gap-2">
             <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-            The device camera will be unblocked once the profile is removed. This action is logged in the audit trail.
+            The device camera will be unblocked once the profile is removed.
+            This action is logged in the audit trail.
           </p>
         </div>
         <div className="flex gap-3 mt-6">
-          <Button variant="secondary" onClick={closeRemoveModal} disabled={actionLoading}>Cancel</Button>
-          <Button variant="danger" onClick={handleRemoveProfile} isLoading={actionLoading}>
+          <Button
+            variant="secondary"
+            onClick={closeRemoveModal}
+            disabled={actionLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleRemoveProfile}
+            isLoading={actionLoading}
+          >
             <Trash2 size={16} /> Remove Profile
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Toggle MDM Removable Modal */}
+      <Modal
+        isOpen={showToggleRemovableModal}
+        onClose={closeToggleRemovableModal}
+        title="Toggle MDM Removable"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-gray-700">
+              <strong>Device:</strong>{" "}
+              {selectedDevice?.device_name ?? selectedDevice?.udid ?? "—"}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong>UDID:</strong> {selectedDevice?.udid ?? "—"}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong>Platform:</strong> {selectedDevice?.platform ?? "—"}
+            </p>
+          </div>
+
+          <p className="text-gray-700">
+            Control whether the <strong>"Leave Remote Management"</strong>{" "}
+            option is visible on this iOS device.
+          </p>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setToggleRemovableValue(false)}
+              className={`flex-1 p-4 rounded-lg border-2 text-center transition-all ${
+                toggleRemovableValue === false
+                  ? "border-red-500 bg-red-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+              }`}
+            >
+              <Lock
+                size={24}
+                className={`mx-auto mb-2 ${toggleRemovableValue === false ? "text-red-600" : "text-gray-400"}`}
+              />
+              <p
+                className={`text-sm font-semibold ${toggleRemovableValue === false ? "text-red-700" : "text-gray-600"}`}
+              >
+                Non-Removable
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Hide "Leave Remote Management"
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setToggleRemovableValue(true)}
+              className={`flex-1 p-4 rounded-lg border-2 text-center transition-all ${
+                toggleRemovableValue === true
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+              }`}
+            >
+              <ShieldOff
+                size={24}
+                className={`mx-auto mb-2 ${toggleRemovableValue === true ? "text-green-600" : "text-gray-400"}`}
+              />
+              <p
+                className={`text-sm font-semibold ${toggleRemovableValue === true ? "text-green-700" : "text-gray-600"}`}
+              >
+                Removable
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Show "Leave Remote Management"
+              </p>
+            </button>
+          </div>
+
+          <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg flex items-start gap-2">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+            The change takes effect after the device processes the MDM Settings
+            command. The device must be online.
+          </p>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <Button
+            variant="secondary"
+            onClick={closeToggleRemovableModal}
+            disabled={actionLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant={toggleRemovableValue ? "success" : "danger"}
+            onClick={handleToggleMdmRemovable}
+            isLoading={actionLoading}
+          >
+            <Lock size={16} />{" "}
+            {toggleRemovableValue ? "Set Removable" : "Set Non-Removable"}
           </Button>
         </div>
       </Modal>

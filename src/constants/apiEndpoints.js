@@ -38,6 +38,8 @@ export const API_ENDPOINTS = {
 
   // MDM Management
   MDM_DEVICES: "/admin/mdm/devices",
+  MDM_TOGGLE_REMOVABLE: (deviceId) =>
+    `/admin/mdm/devices/${deviceId}/removable`,
   MDM_PROFILES: "/admin/mdm/profiles",
   MDM_INSTALL_PROFILE: "/admin/mdm/profile/install",
   MDM_REMOVE_PROFILE: "/admin/mdm/profile/remove",
