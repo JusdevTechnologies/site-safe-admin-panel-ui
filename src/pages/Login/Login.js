@@ -3,10 +3,11 @@
  */
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock } from "lucide-react";
+import { Lock, ExternalLink } from "lucide-react";
 import { Card } from "../../components/Common";
 import { LoginForm } from "../../components/Auth";
 import { useAuth } from "../../contexts/AuthContext";
+import { EXTERNAL_LINKS } from "../../constants/routes";
 
 function Login() {
   const navigate = useNavigate();
@@ -29,6 +30,23 @@ function Login() {
           </div>
           <h1 className="text-4xl font-bold text-gray-900">SiteSafe</h1>
           <p className="text-gray-600 mt-2">Admin Panel</p>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <span className="flex-1 max-w-[60px] h-px bg-gray-200" />
+            <a
+              href={EXTERNAL_LINKS.KOKKEN_WEBSITE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 text-xs text-gray-400 hover:text-blue-600 transition-colors font-medium group"
+            >
+              <img
+                src="/logo.png"
+                alt="Kokken Robotics"
+                className="h-5 w-auto object-contain opacity-70 group-hover:opacity-100 transition-opacity"
+              />
+              <span>Kokken Robotics</span>
+            </a>
+            <span className="flex-1 max-w-[60px] h-px bg-gray-200" />
+          </div>
         </div>
 
         {/* Login Card */}
@@ -43,8 +61,22 @@ function Login() {
           <LoginForm />
 
           {/* Footer */}
-          <div className="mt-6 pt-6 border-t border-gray-100 text-center text-sm text-gray-600">
-            <p>© 2026 SiteSafe Admin Panel. All rights reserved.</p>
+          <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+            <p className="text-sm text-gray-600">
+              © 2026 SiteSafe Admin Panel. All rights reserved.
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Built by{" "}
+              <a
+                href={EXTERNAL_LINKS.KOKKEN_WEBSITE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-0.5 font-medium transition-colors"
+              >
+                Kokken Robotics and Consulting Solutions Pvt Ltd
+                <ExternalLink size={10} className="inline" />
+              </a>
+            </p>
           </div>
         </Card>
 

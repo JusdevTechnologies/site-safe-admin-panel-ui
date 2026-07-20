@@ -1,15 +1,19 @@
 /**
  * Route Configuration
  */
+export const EXTERNAL_LINKS = {
+  KOKKEN_WEBSITE: "https://kokken.in/"
+};
+
 export const ROUTES = {
-  LOGIN: '/login',
-  DASHBOARD: '/dashboard',
-  DEVICE_MANAGEMENT: '/devices',
-  MDM_MANAGEMENT: '/mdm',
-  APPLE_MDM: '/apple-mdm',
-  UNINSTALL_OTP: '/otp',
-  USER_MANAGEMENT: '/users',
-  EMPLOYEE_MANAGEMENT: '/employees',
+  LOGIN: "/login",
+  DASHBOARD: "/dashboard",
+  DEVICE_MANAGEMENT: "/devices",
+  MDM_MANAGEMENT: "/mdm",
+  APPLE_MDM: "/apple-mdm",
+  UNINSTALL_OTP: "/otp",
+  USER_MANAGEMENT: "/users",
+  EMPLOYEE_MANAGEMENT: "/employees"
 };
 
 /**
@@ -17,45 +21,45 @@ export const ROUTES = {
  */
 export const MENU_ITEMS = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
+    id: "dashboard",
+    label: "Dashboard",
     path: ROUTES.DASHBOARD,
-    icon: 'BarChart3',
+    icon: "BarChart3"
   },
   {
-    id: 'devices',
-    label: 'Device Management',
+    id: "devices",
+    label: "Device Management",
     path: ROUTES.DEVICE_MANAGEMENT,
-    icon: 'Smartphone',
+    icon: "Smartphone"
   },
   {
-    id: 'mdm',
-    label: 'MDM Management',
+    id: "mdm",
+    label: "MDM Management",
     path: ROUTES.MDM_MANAGEMENT,
-    icon: 'Server',
+    icon: "Server"
   },
   {
-    id: 'apple-mdm',
-    label: 'Apple MDM Devices',
+    id: "apple-mdm",
+    label: "Apple MDM Devices",
     path: ROUTES.APPLE_MDM,
-    icon: 'Tablet',
+    icon: "Tablet"
   },
   {
-    id: 'otp',
-    label: 'Uninstall OTP',
+    id: "otp",
+    label: "Uninstall OTP",
     path: ROUTES.UNINSTALL_OTP,
-    icon: 'KeyRound',
+    icon: "KeyRound"
   },
   {
-    id: 'employees',
-    label: 'Employees',
+    id: "employees",
+    label: "Employees",
     path: ROUTES.EMPLOYEE_MANAGEMENT,
-    icon: 'BadgeCheck',
+    icon: "BadgeCheck"
   },
   {
-    id: 'users',
-    label: 'User Management',
+    id: "users",
+    label: "User Management",
     path: ROUTES.USER_MANAGEMENT,
-    icon: 'Users',
-  },
+    icon: "Users"
+  }
 ];

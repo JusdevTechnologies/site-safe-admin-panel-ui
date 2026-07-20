@@ -3,11 +3,8 @@
  * Top header of the dashboard
  */
 import { Bell, Settings, User } from "lucide-react";
-import { useAuth } from "../../contexts/AuthContext";
 
 function Header() {
-  useAuth();
-
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
       <div className="px-6 py-4 flex items-center justify-end">
